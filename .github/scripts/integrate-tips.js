@@ -2,6 +2,7 @@ const {
   BedrockRuntimeClient,
   InvokeModelCommand,
 } = require("@aws-sdk/client-bedrock-runtime");
+const { NodeHttpHandler } = require("@smithy/node-http-handler");
 const fs = require("fs").promises;
 const path = require("path");
 
@@ -17,12 +18,16 @@ const CONFIG = {
   MAX_PROMPT_LENGTH: 800000,
 };
 
-// SDK 自动从环境变量获取凭证
+// 使用 HTTP/1.1 避免 NGHTTP2 问题
 const client = new BedrockRuntimeClient({
   region: CONFIG.REGION,
+  requestHandler: new NodeHttpHandler({
+    connectionTimeout: 60000,
+    socketTimeout: 300000,
+  }),
 });
 
-async function invokeClaudeBedrock(prompt) {
+async function invokeClaudeBedrock(prompt, retries = 3) {
   const command = new InvokeModelCommand({
     modelId: CONFIG.MODEL_ID,
     contentType: "application/json",
@@ -35,9 +40,19 @@ async function invokeClaudeBedrock(prompt) {
     }),
   });
 
-  const response = await client.send(command);
-  const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-  return responseBody.content[0].text;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`尝试调用 Bedrock (${attempt}/${retries})...`);
+      const response = await client.send(command);
+      const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+      return responseBody.content[0].text;
+    } catch (err) {
+      console.error(`尝试 ${attempt} 失败:`, err.message);
+      if (attempt === retries) throw err;
+      // 等待后重试
+      await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+    }
+  }
 }
 
 // 安全：验证文件路径，防止路径遍历攻击
