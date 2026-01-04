@@ -121,7 +121,8 @@ git push origin main
 3. ✅ 智能判断：新增 / 合并 / 跳过（重复）/ 拒绝（安全）
 4. ✅ 更新 `asinit_AwosomeCLAUDE.md` 核心协议
 5. ✅ 更新 `tips/README.md` 整合记录
-6. ✅ 自动提交变更
+6. ✅ 将已处理的 tips 移动到 `tips/archived/` 目录
+7. ✅ 自动提交变更
 
 ### 第五步：同步最新协议
 
@@ -246,7 +247,8 @@ graph TD
 │   └── gemini-mcp-suagent.md # Gemini 子代理配置
 └── tips/                      # 团队避坑经验
     ├── README.md              # 整合记录
-    └── _template.md           # 模板
+    ├── _template.md           # 模板
+    └── archived/              # 已整合的 tips 归档
 ```
 
 ## License

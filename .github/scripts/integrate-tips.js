@@ -11,6 +11,7 @@ const CONFIG = {
   REGION: process.env.AWS_REGION || "us-west-1",
   PROTOCOL_FILE: "asinit_AwosomeCLAUDE.md",
   TIPS_README: "tips/README.md",
+  TIPS_ARCHIVED: "tips/archived",
   ALLOWED_EXTENSIONS: [".md"],
   MAX_PROMPT_LENGTH: 800000,
 };
@@ -221,6 +222,20 @@ async function main() {
     // 写入更新后的文件
     await fs.writeFile(CONFIG.PROTOCOL_FILE, result.updatedProtocol);
     await fs.writeFile(CONFIG.TIPS_README, result.updatedTipsReadme);
+
+    // 移动已处理的 tips 到 archived 目录
+    await fs.mkdir(CONFIG.TIPS_ARCHIVED, { recursive: true });
+    for (const file of changedFiles) {
+      try {
+        const cleanPath = validateFilePath(file);
+        const fileName = path.basename(cleanPath);
+        const destPath = path.join(CONFIG.TIPS_ARCHIVED, fileName);
+        await fs.rename(cleanPath, destPath);
+        console.log(`已归档: ${cleanPath} → ${destPath}`);
+      } catch (err) {
+        console.warn(`归档失败 ${file}: ${err.message}`);
+      }
+    }
 
     // 删除备份
     await fs.unlink(`${CONFIG.PROTOCOL_FILE}.bak`);
