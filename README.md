@@ -110,45 +110,30 @@ cp asinit_AwosomeCLAUDE.md ~/.claude/commands/asinit.md
 
 ---
 
-### 维护者：整合 Tips 到核心协议
+### 自动整合（GitHub Actions）
 
-**触发时机：**
-- 定期（如每周）检查 `tips/` 目录
-- 或当 tips 积累到一定数量时
+当团队成员推送 tips 文件到 main 分支后，GitHub Actions 会自动：
 
-**流程：**
+1. 检测 `tips/` 目录下的新增文件
+2. 调用 Claude Sonnet 4 API 智能整合
+3. 更新 `asinit_AwosomeCLAUDE.md` 核心协议
+4. 更新 `tips/README.md` 已整合记录
+5. 自动提交变更
+
+**维护者无需手动操作**，只需在 GitHub 仓库设置中添加 Secret：
 
 ```
-1. 拉取最新代码
-   git pull origin main
+Settings → Secrets and variables → Actions → New repository secret
 
-2. 使用 AI 整合（推荐 Claude Code）
-   执行以下 prompt：
-
-   ---
-   请帮我整合 tips/ 目录下的新增避坑经验到 asinit_AwosomeCLAUDE.md：
-   
-   1. 读取 tips/ 目录下所有 md 文件
-   2. 读取当前 asinit_AwosomeCLAUDE.md 内容
-   3. 智能判断每条 tip：
-      - 若与现有条目重复 → 跳过或合并
-      - 若是新内容 → 添加到合适位置
-   4. 更新 tips/README.md 中的"已整合的 Tips"表格
-   5. 保持协议结构清晰，避免冗余
-   ---
-
-3. 检查 AI 的修改，确认无误后提交
-   git add -A
-   git commit -m "整合 tips 到核心协议"
-   git push origin main
-
-4. （可选）删除已整合的 tips 文件，或保留作为历史记录
+Name: ANTHROPIC_API_KEY
+Value: 你的 Claude API Key
 ```
 
-**为什么用 AI 整合？**
+**为什么用 AI 自动整合？**
 - 避免人工整合导致的重复条目
-- AI 可以智能判断是"更新已有条目"还是"新增条目"
+- AI 智能判断是"更新已有条目"还是"新增条目"
 - 保持协议文档结构一致性
+- 完全自动化，零人工干预
 
 ---
 

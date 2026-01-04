@@ -1,0 +1,56 @@
+name: Auto Integrate Tips
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tips/*.md'
+      - '!tips/README.md'
+      - '!tips/_template.md'
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get changed tips files
+        id: changed
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'tips/*.md' | grep -v 'tips/README.md' | grep -v 'tips/_template.md' || true)
+          echo "files=$CHANGED" >> $GITHUB_OUTPUT
+          if [ -z "$CHANGED" ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node.js
+        if: steps.changed.outputs.has_changes == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        if: steps.changed.outputs.has_changes == 'true'
+        run: npm install @anthropic-ai/sdk
+
+      - name: Integrate tips with Claude
+        if: steps.changed.outputs.has_changes == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node .github/scripts/integrate-tips.js "${{ steps.changed.outputs.files }}"
+
+      - name: Commit and push
+        if: steps.changed.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add asinit_AwosomeCLAUDE.md tips/README.md
+          git diff --staged --quiet || git commit -m "自动整合 tips 到核心协议 [skip ci]"
+          git push
