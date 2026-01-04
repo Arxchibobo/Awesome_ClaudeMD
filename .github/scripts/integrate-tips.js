@@ -7,7 +7,8 @@ const path = require("path");
 
 // 配置
 const CONFIG = {
-  MODEL_ID: "anthropic.claude-sonnet-4-20250514-v1:0",
+  // Claude Sonnet 4.5 US inference profile (必须使用 inference profile)
+  MODEL_ID: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
   REGION: process.env.AWS_REGION || "us-west-1",
   PROTOCOL_FILE: "asinit_AwosomeCLAUDE.md",
   TIPS_README: "tips/README.md",
