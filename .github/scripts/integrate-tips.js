@@ -35,9 +35,12 @@ async function invokeClaudeBedrock(prompt) {
     "${outFile}"`;
 
   console.log("调用 AWS CLI...");
-  execSync(cmd, { stdio: "inherit" });
+  execSync(cmd, { stdio: ["pipe", "pipe", "inherit"] }); // 忽略 stdout 元数据
 
-  const response = JSON.parse(require("fs").readFileSync(outFile, "utf-8"));
+  const responseRaw = require("fs").readFileSync(outFile, "utf-8");
+  console.log("响应文件大小:", responseRaw.length);
+  
+  const response = JSON.parse(responseRaw);
   return response.content[0].text;
 }
 
