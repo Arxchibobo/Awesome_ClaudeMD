@@ -38,12 +38,14 @@ jobs:
 
       - name: Install dependencies
         if: steps.changed.outputs.has_changes == 'true'
-        run: npm install @anthropic-ai/sdk
+        run: npm install @aws-sdk/client-bedrock-runtime
 
-      - name: Integrate tips with Claude
+      - name: Integrate tips with Claude (Bedrock)
         if: steps.changed.outputs.has_changes == 'true'
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-west-1
         run: node .github/scripts/integrate-tips.js "${{ steps.changed.outputs.files }}"
 
       - name: Commit and push

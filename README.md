@@ -108,7 +108,9 @@ git push origin main
 3. 更新核心协议
 4. 自动提交
 
-**配置：** 在仓库 Settings → Secrets 添加 `ANTHROPIC_API_KEY`
+**配置：** 在仓库 Settings → Secrets 添加：
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
 
 ---
 
