@@ -20,7 +20,6 @@ async function invokeClaudeBedrock(prompt) {
     messages: [{ role: "user", content: prompt }],
   });
 
-  // Base64 编码解决中文问题
   const bodyBase64 = Buffer.from(body).toString("base64");
   const outFile = "/tmp/bedrock-response.json";
 
@@ -35,20 +34,11 @@ async function invokeClaudeBedrock(prompt) {
     "${outFile}" 2>&1 || true`;
 
   console.log("调用 AWS CLI...");
-  const output = execSync(cmd, { encoding: "utf-8" });
-  console.log("CLI 输出:", output);
+  execSync(cmd, { encoding: "utf-8" });
 
-  // 检查文件是否存在
-  if (!require("fs").existsSync(outFile)) {
-    throw new Error("响应文件不存在");
-  }
-
-  // 读取响应 - Bedrock 输出是二进制，需要正确处理
   const responseBuffer = require("fs").readFileSync(outFile);
-  console.log("响应文件大小:", responseBuffer.length);
-  console.log("响应前200字符:", responseBuffer.toString("utf-8").substring(0, 200));
-  
   const response = JSON.parse(responseBuffer.toString("utf-8"));
+  console.log("Claude 响应成功，内容长度:", response.content[0].text.length);
   return response.content[0].text;
 }
 
@@ -137,12 +127,22 @@ async function main() {
 
   try {
     const content = await invokeClaudeBedrock(prompt);
+    console.log("Claude 返回内容前500字符:", content.substring(0, 500));
 
     let jsonStr = content;
     const match = content.match(/```json\n?([\s\S]*?)\n?```/);
-    if (match) jsonStr = match[1];
+    if (match) {
+      jsonStr = match[1];
+      console.log("提取到 JSON 块，长度:", jsonStr.length);
+    }
 
-    const result = JSON.parse(jsonStr);
+    let result;
+    try {
+      result = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      console.error("JSON 解析失败，原始内容:", jsonStr.substring(0, 1000));
+      throw parseErr;
+    }
 
     if (!result.updatedProtocol.includes("<!-- ASINIT START -->")) {
       throw new Error("输出缺少 ASINIT 标记");
