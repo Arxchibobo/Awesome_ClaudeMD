@@ -24,7 +24,9 @@ async function invokeClaudeBedrock(prompt) {
   const bodyBase64 = Buffer.from(body).toString("base64");
   const outFile = "/tmp/bedrock-response.json";
 
-  const cmd = `aws bedrock-runtime invoke-model \
+  const cmd = `AWS_ACCESS_KEY_ID="${(process.env.AWS_ACCESS_KEY_ID || '').trim()}" \
+    AWS_SECRET_ACCESS_KEY="${(process.env.AWS_SECRET_ACCESS_KEY || '').trim()}" \
+    aws bedrock-runtime invoke-model \
     --model-id "${CONFIG.MODEL_ID}" \
     --region "${CONFIG.REGION}" \
     --content-type "application/json" \
