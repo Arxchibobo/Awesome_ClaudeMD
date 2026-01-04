@@ -36,10 +36,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        if: steps.changed.outputs.has_changes == 'true'
-        run: npm install @aws-sdk/client-bedrock-runtime @smithy/node-http-handler
-
       - name: Integrate tips with Claude (Bedrock)
         if: steps.changed.outputs.has_changes == 'true'
         env:
