@@ -32,15 +32,23 @@ async function invokeClaudeBedrock(prompt) {
     --content-type "application/json" \
     --accept "application/json" \
     --body "${bodyBase64}" \
-    "${outFile}"`;
+    "${outFile}" 2>&1 || true`;
 
   console.log("调用 AWS CLI...");
-  execSync(cmd, { stdio: ["pipe", "pipe", "inherit"] }); // 忽略 stdout 元数据
+  const output = execSync(cmd, { encoding: "utf-8" });
+  console.log("CLI 输出:", output);
 
-  const responseRaw = require("fs").readFileSync(outFile, "utf-8");
-  console.log("响应文件大小:", responseRaw.length);
+  // 检查文件是否存在
+  if (!require("fs").existsSync(outFile)) {
+    throw new Error("响应文件不存在");
+  }
+
+  // 读取响应 - Bedrock 输出是二进制，需要正确处理
+  const responseBuffer = require("fs").readFileSync(outFile);
+  console.log("响应文件大小:", responseBuffer.length);
+  console.log("响应前200字符:", responseBuffer.toString("utf-8").substring(0, 200));
   
-  const response = JSON.parse(responseRaw);
+  const response = JSON.parse(responseBuffer.toString("utf-8"));
   return response.content[0].text;
 }
 
