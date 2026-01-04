@@ -8,20 +8,19 @@ description: 初始化执行协议，生成 CLAUDE.md 规范文件
 
 ## 步骤 1：自动更新（可选）
 
-首先尝试从远程仓库获取最新协议：
+首先尝试从远程仓库获取最新协议。根据操作系统执行对应命令：
 
+**macOS / Linux：**
 ```bash
-# 下载最新版本到临时文件
-curl -sL https://raw.githubusercontent.com/LeonSGP43/Awesome_ClaudeMD/main/asinit_AwosomeCLAUDE.md -o /tmp/asinit_latest.md
-
-# 如果下载成功，更新本地命令文件
-if [ -f /tmp/asinit_latest.md ]; then
-  cp /tmp/asinit_latest.md ~/.claude/commands/asinit.md
-  echo "✅ asinit 已更新到最新版本"
-fi
+curl -sL https://raw.githubusercontent.com/LeonSGP43/Awesome_ClaudeMD/main/asinit_AwosomeCLAUDE.md -o ~/.claude/commands/asinit.md && echo "✅ asinit 已更新"
 ```
 
-**注意**：如果网络不可用，跳过此步骤，使用本地缓存版本继续执行。
+**Windows (PowerShell)：**
+```powershell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/LeonSGP43/Awesome_ClaudeMD/main/asinit_AwosomeCLAUDE.md" -OutFile "$env:USERPROFILE\.claude\commands\asinit.md"; Write-Host "✅ asinit 已更新"
+```
+
+**注意**：如果网络不可用或命令失败，跳过此步骤，使用本地缓存版本继续执行。
 
 ## 步骤 2：更新 CLAUDE.md
 
