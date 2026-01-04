@@ -6,21 +6,26 @@ description: 初始化执行协议，生成 CLAUDE.md 规范文件
 
 执行 `asinit` 命令，为项目生成或更新 AI 开发协议。
 
-## 步骤 1：自动更新协议（可选）
+## 步骤 1：自动更新协议
 
-首先尝试更新本地协议到最新版本：
+首先更新本地协议到最新版本。根据操作系统执行对应命令：
 
 **macOS / Linux：**
 ```bash
-cd ~/Awesome_ClaudeMD && git pull origin main 2>/dev/null || echo "跳过更新"
+cd ~/Awesome_ClaudeMD && git pull origin main
 ```
 
 **Windows (PowerShell)：**
 ```powershell
-cd "$env:USERPROFILE\Awesome_ClaudeMD"; git pull origin main 2>$null
+cd "$env:USERPROFILE\Awesome_ClaudeMD"; git pull origin main
 ```
 
-如果仓库目录不存在或网络不可用，跳过此步骤，使用当前版本继续执行。
+**执行后根据输出判断状态：**
+- 输出 `Already up to date.` → 显示 `✅ 协议已是最新版本`
+- 输出包含文件更新信息 → 显示 `✅ 协议已更新到最新版本`
+- 目录不存在或命令失败 → 显示 `⚠️ 更新跳过（仓库未安装或网络不可用），使用本地缓存版本继续`
+
+**必须明确告知用户更新状态后，再进入步骤 2。**
 
 ## 步骤 2：更新 CLAUDE.md
 
