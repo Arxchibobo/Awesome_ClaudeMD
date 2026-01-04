@@ -223,13 +223,14 @@ async function main() {
     await fs.writeFile(CONFIG.PROTOCOL_FILE, result.updatedProtocol);
     await fs.writeFile(CONFIG.TIPS_README, result.updatedTipsReadme);
 
-    // 移动已处理的 tips 到 archived 目录
+    // 移动已处理的 tips 到 archived 目录，文件名加上日期
     await fs.mkdir(CONFIG.TIPS_ARCHIVED, { recursive: true });
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
     for (const file of changedFiles) {
       try {
         const cleanPath = validateFilePath(file);
-        const fileName = path.basename(cleanPath);
-        const destPath = path.join(CONFIG.TIPS_ARCHIVED, fileName);
+        const fileName = path.basename(cleanPath, ".md");
+        const destPath = path.join(CONFIG.TIPS_ARCHIVED, `${fileName}_${today}.md`);
         await fs.rename(cleanPath, destPath);
         console.log(`已归档: ${cleanPath} → ${destPath}`);
       } catch (err) {
