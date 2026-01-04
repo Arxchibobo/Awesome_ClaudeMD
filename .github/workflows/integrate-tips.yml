@@ -8,6 +8,9 @@ on:
       - '!tips/README.md'
       - '!tips/_template.md'
 
+permissions:
+  contents: write
+
 jobs:
   integrate:
     runs-on: ubuntu-latest
