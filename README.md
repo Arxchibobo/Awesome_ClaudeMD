@@ -1,169 +1,169 @@
-# ASINIT
+# Awesome ClaudeMD
 
-Claude Code 执行协议初始化工具，为项目生成标准化的 AI 开发规范。
+**团队共享 CLAUDE.md 的最佳实践** — 一次安装，永久热更新
 
-## 核心优势
+## 为什么需要这个？
 
-| 特性 | 说明 |
-|------|------|
-| 🔄 **双模式切换** | 自动识别 specs 文档，智能切换严格/通用开发模式 |
-| 🛡️ **补丁式更新** | 只更新标记区域，保留项目自定义配置 |
-| 🤖 **AI 自动整合** | 团队提交 tips 后自动整合到核心协议，零人工干预 |
-| 🔒 **多层安全防护** | 路径遍历防护、Prompt 注入防护、文件备份恢复 |
-| 👥 **团队协作友好** | 分布式知识库，团队经验自动沉淀 |
+手动维护 `CLAUDE.md` 的痛点：
+- 每次发现新问题都要手动编辑
+- 团队成员的经验无法共享
+- 版本混乱，不知道哪个是最新的
+
+**Awesome ClaudeMD 的解决方案：**
+
+```
+/asinit  ← 一个命令，自动拉取最新协议到你的项目
+```
+
+## 核心特性
+
+### 🔥 热更新机制
+
+```bash
+# 一次安装
+git clone https://github.com/LeonSGP43/Awesome_ClaudeMD.git ~/Awesome_ClaudeMD
+ln -sf ~/Awesome_ClaudeMD/asinit_AwosomeCLAUDE.md ~/.claude/commands/asinit.md
+
+# 永久使用 — 每次执行 /asinit 自动拉取最新版本
+/asinit
+```
+
+软链接 + 自动 git pull = **零维护成本的持续更新**
+
+### 🤖 AI 自动合并团队经验
+
+团队成员提交避坑经验 → GitHub Actions 触发 → Claude 智能整合 → 自动更新核心协议
+
+```
+提交 tips/xxx.md → AI 审核 → 自动合并到协议 → 全团队 /asinit 即可同步
+```
+
+**安全机制：**
+- 路径遍历防护
+- Prompt 注入防护  
+- 自动备份恢复
+- 输出完整性校验
+
+### 📐 分层架构设计
+
+协议分为两大部分，互不干扰：
+
+| 层级 | 内容 | 可修改 |
+|------|------|--------|
+| **执行流程层** | 标准开发流程（严格模式/通用模式） | ❌ 锁定 |
+| **约束补丁层** | 团队积累的避坑经验、规范约束 | ✅ AI 自动追加 |
+
+```markdown
+<!-- ASINIT START -->
+## 一、标准执行流程     ← 锁定，不可修改
+...
+## 二、规范约束         ← 补丁区，持续积累
+<!-- CONSTRAINTS START -->
+### 测试规范
+### Git 提交规范
+### ...更多团队经验
+<!-- CONSTRAINTS END -->
+<!-- ASINIT END -->
+```
 
 ## 快速开始
 
-### 安装
+### 安装（一次性）
 
 **macOS / Linux：**
 ```bash
-# 克隆仓库到任意位置
 git clone https://github.com/LeonSGP43/Awesome_ClaudeMD.git ~/Awesome_ClaudeMD
-
-# 创建软链接（更新仓库后自动生效）
 mkdir -p ~/.claude/commands
 ln -sf ~/Awesome_ClaudeMD/asinit_AwosomeCLAUDE.md ~/.claude/commands/asinit.md
 ```
 
-**Windows (PowerShell，需管理员权限)：**
+**Windows (PowerShell 管理员)：**
 ```powershell
-# 克隆仓库
 git clone https://github.com/LeonSGP43/Awesome_ClaudeMD.git "$env:USERPROFILE\Awesome_ClaudeMD"
-
-# 创建符号链接（更新仓库后自动生效）
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\commands"
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\commands\asinit.md" -Target "$env:USERPROFILE\Awesome_ClaudeMD\asinit_AwosomeCLAUDE.md" -Force
 ```
 
-### 更新
-
-**macOS / Linux：**
-```bash
-cd ~/Awesome_ClaudeMD && git pull
-```
-
-**Windows (PowerShell)：**
-```powershell
-cd "$env:USERPROFILE\Awesome_ClaudeMD"; git pull
-```
-
-由于使用了软链接，git pull 后 `/asinit` 命令自动使用最新版本。
-
 ### 使用
+
+在任意项目中执行：
 
 ```bash
 /asinit
 ```
 
+自动完成：
+1. 拉取最新协议版本
+2. 生成/更新项目的 `CLAUDE.md`
+3. 保留你的自定义配置（只更新标记区域内的内容）
+
 ---
 
-## 团队协作完整指南
+## 三种使用方式
 
-### 第一步：克隆仓库
+| 方式 | 适合场景 | 更新方式 |
+|------|----------|----------|
+| **① /asinit 命令** | 推荐！长期使用 | 自动热更新 |
+| **② 手动复制** | 临时使用、无法安装 | 手动同步 |
+| **③ Fork 定制** | 企业内部定制版 | 自行维护 |
+
+### 方式①：/asinit 命令（推荐）
+
+见上方「快速开始」
+
+### 方式②：手动复制
+
+直接复制 [asinit_AwosomeCLAUDE.md](./asinit_AwosomeCLAUDE.md) 中 `<!-- ASINIT START -->` 到 `<!-- ASINIT END -->` 之间的内容到你的 `CLAUDE.md`
+
+### 方式③：Fork 定制
+
+Fork 本仓库，修改协议内容，配置 AWS Secrets 启用自动整合
+
+---
+
+## 团队协作：贡献避坑经验
+
+### 提交流程
 
 ```bash
-git clone https://github.com/LeonSGP43/Awesome_ClaudeMD.git
-cd Awesome_ClaudeMD
-```
-
-### 第二步：提交避坑经验
-
-```bash
-# 1. 确保在最新代码上工作
+# 1. 拉取最新
 git pull origin main
 
-# 2. 创建你的 tips 文件
-# 命名规范：<主题>-<姓名>.md
-# 例如：typescript-null-check-zhangsan.md
-touch tips/你的主题-你的名字.md
+# 2. 创建 tips 文件（命名：主题-姓名.md）
+touch tips/null-check-zhangsan.md
 
-# 3. 编辑文件，按模板填写内容
+# 3. 按模板填写
+# 4. 提交推送
+git add tips/你的文件.md
+git commit -m "tips: 添加 xxx 避坑经验"
+git push
 ```
 
-**tips 文件模板：**
+### Tips 模板
 
 ```markdown
 # 主题名称
 
 ## 问题
-
-简述你遇到的问题
+简述遇到的问题
 
 ## 解决方案
-
 Claude 应该如何处理
 
 ## 示例（可选）
-
 具体例子
 ```
 
-### 第三步：提交并推送
+### 自动整合流程
 
-```bash
-# 只添加你的 tips 文件
-git add tips/你的文件.md
-
-# 提交（使用规范的 commit message）
-git commit -m "tips: 添加 xxx 避坑经验"
-
-# 推送到远程
-git push origin main
+```
+推送 → GitHub Actions → Claude 分析 → 智能合并 → 归档原文件
 ```
 
-### 第四步：自动整合
-
-推送后 GitHub Actions 自动触发：
-
-1. ✅ 检测 `tips/` 目录新增文件
-2. ✅ 调用 Claude API (AWS Bedrock) 分析内容
-3. ✅ 智能判断：新增 / 合并 / 跳过（重复）/ 拒绝（安全）
-4. ✅ 更新 `asinit_AwosomeCLAUDE.md` 核心协议
-5. ✅ 更新 `tips/README.md` 整合记录
-6. ✅ 将已处理的 tips 移动到 `tips/archived/` 目录
-7. ✅ 自动提交变更
-
-### 第五步：同步最新协议
-
-在你的项目中执行：
-
-```bash
-/asinit
-```
-
-执行时会自动 `git pull` 更新仓库，软链接确保使用最新协议。
-
----
-
-## 提交规则
-
-| 规则 | 说明 |
-|------|------|
-| ❌ 禁止修改 | `asinit_AwosomeCLAUDE.md`（由 AI 自动维护） |
-| ❌ 禁止修改 | 他人的 tips 文件 |
-| ❌ 禁止修改 | `tips/README.md`（由 AI 自动更新） |
-| ✅ 允许操作 | 在 `tips/` 目录下新增 `.md` 文件 |
-
----
-
-## 安全机制
-
-自动整合脚本包含多层安全防护：
-
-| 机制 | 说明 |
-|------|------|
-| 路径遍历防护 | 验证文件路径在工作目录内，防止读取敏感文件 |
-| Prompt 注入防护 | 使用 XML 标签分隔输入数据，防止恶意指令覆盖规则 |
-| 文件备份恢复 | 处理前自动备份，失败时自动恢复 |
-| 输出验证 | 检查输出完整性，缺少关键标记则拒绝写入 |
-| 安全审计 | AI 检测恶意内容并报告 |
-
-**保护区域：**
-- 🔒 标准执行流程（不可修改）
-- 🔒 系统指令（不可修改）
-- 🔒 YAML front matter（不可修改）
-- ✏️ 规范约束区域（可增删改）
+**提交规则：**
+- ✅ 只能新增 `tips/*.md` 文件
+- ❌ 禁止修改 `asinit_AwosomeCLAUDE.md`（AI 自动维护）
+- ❌ 禁止修改他人的 tips
 
 ---
 
@@ -171,60 +171,19 @@ git push origin main
 
 ### 严格执行模式
 
-当用户提及 specs 文档时触发，强制 5 步流程：
+触发条件：用户提及 specs 文档（requirements.md、design.md、tasks.md）
 
-1. 加载 Specs
-2. 单 Task 执行
-3. 强制测试
-4. Gemini 验收
-5. 提交
+强制 5 步流程：加载 Specs → 单 Task 执行 → 强制测试 → Gemini 验收 → 提交
 
 ### 通用开发模式
 
-默认模式，4 步流程：
-
-1. 理解需求
-2. 实现
-3. 测试
-4. 提交
+默认模式，4 步流程：理解需求 → 实现 → 测试 → 提交
 
 ---
 
-## 架构概览
+## 仓库配置（Fork 用户）
 
-```mermaid
-graph TD
-    subgraph "用户环境"
-        User[开发者]
-        CC[Claude Code]
-        ASINIT[asinit 命令]
-    end
-
-    subgraph "目标项目"
-        CMD[CLAUDE.md]
-        Specs[specs/]
-        Code[源代码]
-    end
-
-    subgraph "外部服务"
-        Gemini[Gemini Subagent]
-        GHA[GitHub Actions]
-    end
-
-    User -->|/asinit| CC
-    CC -->|读取| ASINIT
-    ASINIT -->|生成/更新| CMD
-    CMD -.->|配置行为| CC
-    CC -->|严格模式| Specs
-    CC -->|验收| Gemini
-    GHA -->|整合 tips| ASINIT
-```
-
----
-
-## 仓库配置
-
-在 GitHub 仓库 Settings → Secrets and variables → Actions 添加：
+Settings → Secrets and variables → Actions：
 
 | Secret | 说明 |
 |--------|------|
@@ -236,19 +195,14 @@ graph TD
 ## 目录结构
 
 ```
-├── asinit_AwosomeCLAUDE.md   # 核心协议（AI 自动维护）
-├── README.md
+├── asinit_AwosomeCLAUDE.md   # 核心协议（AI 维护）
+├── tips/                      # 团队避坑经验
+│   ├── _template.md           # 模板
+│   └── archived/              # 已整合归档
 ├── .github/
-│   ├── scripts/
-│   │   └── integrate-tips.js # 整合脚本
-│   └── workflows/
-│       └── integrate-tips.yml # GitHub Actions
-├── Subagent/
-│   └── gemini-mcp-suagent.md # Gemini 子代理配置
-└── tips/                      # 团队避坑经验
-    ├── README.md              # 整合记录
-    ├── _template.md           # 模板
-    └── archived/              # 已整合的 tips 归档
+│   ├── scripts/integrate-tips.js
+│   └── workflows/integrate-tips.yml
+└── Subagent/                  # Gemini 子代理配置
 ```
 
 ## License
