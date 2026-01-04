@@ -125,19 +125,13 @@ git push origin main
 
 ### 第五步：同步最新协议
 
-手动拉取仓库更新并复制到本地：
-
-```bash
-cd Awesome_ClaudeMD
-git pull origin main
-cp asinit_AwosomeCLAUDE.md ~/.claude/commands/asinit.md
-```
-
-然后在你的项目中执行：
+在你的项目中执行：
 
 ```bash
 /asinit
 ```
+
+执行时会自动 `git pull` 更新仓库，软链接确保使用最新协议。
 
 ---
 
