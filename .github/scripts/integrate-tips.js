@@ -127,24 +127,25 @@ async function main() {
 
   try {
     const content = await invokeClaudeBedrock(prompt);
-    console.log("Claude 返回内容前500字符:", content.substring(0, 500));
 
+    // 提取最外层的 JSON 代码块 - 匹配 ```json 开头到最后一个 ``` 结尾
     let jsonStr = content;
-    const match = content.match(/```json\n?([\s\S]*?)\n?```/);
-    if (match) {
-      jsonStr = match[1];
-      console.log("提取到 JSON 块，长度:", jsonStr.length);
+    
+    // 方法：找到 ```json 后，从末尾往前找最后一个 ```
+    const jsonStart = content.indexOf('```json');
+    if (jsonStart !== -1) {
+      const contentAfterStart = content.substring(jsonStart + 7); // 跳过 ```json
+      const lastBackticks = contentAfterStart.lastIndexOf('```');
+      if (lastBackticks !== -1) {
+        jsonStr = contentAfterStart.substring(0, lastBackticks).trim();
+      }
     }
 
-    let result;
-    try {
-      result = JSON.parse(jsonStr);
-    } catch (parseErr) {
-      console.error("JSON 解析失败，原始内容:", jsonStr.substring(0, 1000));
-      throw parseErr;
-    }
+    console.log("JSON 长度:", jsonStr.length);
 
-    if (!result.updatedProtocol.includes("<!-- ASINIT START -->")) {
+    const result = JSON.parse(jsonStr);
+
+    if (!result.updatedProtocol || !result.updatedProtocol.includes("<!-- ASINIT START -->")) {
       throw new Error("输出缺少 ASINIT 标记");
     }
 
