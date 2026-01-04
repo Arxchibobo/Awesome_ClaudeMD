@@ -20,17 +20,16 @@ async function invokeClaudeBedrock(prompt) {
     messages: [{ role: "user", content: prompt }],
   });
 
-  // 写入临时文件避免命令行长度限制
-  const tmpFile = "/tmp/bedrock-request.json";
+  // Base64 编码解决中文问题
+  const bodyBase64 = Buffer.from(body).toString("base64");
   const outFile = "/tmp/bedrock-response.json";
-  require("fs").writeFileSync(tmpFile, body);
 
   const cmd = `aws bedrock-runtime invoke-model \
     --model-id "${CONFIG.MODEL_ID}" \
     --region "${CONFIG.REGION}" \
     --content-type "application/json" \
     --accept "application/json" \
-    --body "file://${tmpFile}" \
+    --body "${bodyBase64}" \
     "${outFile}"`;
 
   console.log("调用 AWS CLI...");
