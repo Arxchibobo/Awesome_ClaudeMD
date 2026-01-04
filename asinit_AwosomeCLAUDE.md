@@ -6,15 +6,30 @@ description: 初始化执行协议，生成 CLAUDE.md 规范文件
 
 执行 `asinit` 命令，为项目生成或更新 AI 开发协议。
 
-## 唯一动作
+## 步骤 1：自动更新（可选）
+
+首先尝试从远程仓库获取最新协议：
+
+```bash
+# 下载最新版本到临时文件
+curl -sL https://raw.githubusercontent.com/LeonSGP43/Awesome_ClaudeMD/main/asinit_AwosomeCLAUDE.md -o /tmp/asinit_latest.md
+
+# 如果下载成功，更新本地命令文件
+if [ -f /tmp/asinit_latest.md ]; then
+  cp /tmp/asinit_latest.md ~/.claude/commands/asinit.md
+  echo "✅ asinit 已更新到最新版本"
+fi
+```
+
+**注意**：如果网络不可用，跳过此步骤，使用本地缓存版本继续执行。
+
+## 步骤 2：更新 CLAUDE.md
 
 更新 `CLAUDE.md` 中的 asinit 协议部分：
 
 1. 若 `CLAUDE.md` 不存在 → 创建新文件，写入下方内容
 2. 若 `CLAUDE.md` 存在但无 `<!-- ASINIT START -->` 标记 → 将下方内容插入到文件**最前面**
 3. 若 `CLAUDE.md` 存在且有标记 → 只更新 `<!-- ASINIT START -->` 和 `<!-- ASINIT END -->` 之间的内容，**保留文件其他部分不变**
-
-不做任何其他动作。
 
 ## 生成内容
 

@@ -101,7 +101,12 @@ git push origin main
 /asinit
 ```
 
-即可获取包含最新团队经验的协议。
+执行时会自动：
+1. 从 GitHub 下载最新版 `asinit_AwosomeCLAUDE.md`
+2. 更新本地 `~/.claude/commands/asinit.md`
+3. 将最新协议写入项目 `CLAUDE.md`
+
+**离线模式**：如果网络不可用，使用本地缓存版本继续执行。
 
 ---
 
