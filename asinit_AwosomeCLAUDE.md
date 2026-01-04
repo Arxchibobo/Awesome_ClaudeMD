@@ -136,16 +136,7 @@ cd "$env:USERPROFILE\Awesome_ClaudeMD"; git pull origin main
 2. **目录**：使用根目录统一测试目录（`tests/` 或 `__tests__/`）
 3. **命名**：测试文件与被测模块对应，如 `tests/user.test.ts` 对应 `src/user.ts`
 
-### 自动化工作流验证
 
-1. **Tips 整合流程**：当新的 tip 文件提交到 `tips/` 目录时，GitHub Actions 会自动触发整合工作流
-2. **整合机制**：通过 AWS Bedrock API 调用 Claude 分析并整合内容到协议约束部分
-3. **文件归档**：整合完成后，原 tip 文件自动移动到 `tips/archived/` 目录
-4. **验证要点**：
-   - 工作流正常触发
-   - Bedrock API 调用成功
-   - 内容正确整合到约束部分
-   - 源文件正确归档
 
 <!-- CONSTRAINTS END -->
 
