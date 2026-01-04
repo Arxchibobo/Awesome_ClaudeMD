@@ -3,6 +3,7 @@ const {
   InvokeModelCommand,
 } = require("@aws-sdk/client-bedrock-runtime");
 const { NodeHttpHandler } = require("@smithy/node-http-handler");
+const https = require("https");
 const fs = require("fs").promises;
 const path = require("path");
 
@@ -18,12 +19,18 @@ const CONFIG = {
   MAX_PROMPT_LENGTH: 800000,
 };
 
-// 使用 HTTP/1.1 避免 NGHTTP2 问题
+// 强制使用 HTTP/1.1 避免 NGHTTP2 问题
+const httpsAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 50,
+});
+
 const client = new BedrockRuntimeClient({
   region: CONFIG.REGION,
   requestHandler: new NodeHttpHandler({
-    connectionTimeout: 60000,
-    socketTimeout: 300000,
+    httpsAgent,
+    connectionTimeout: 120000,
+    socketTimeout: 600000,
   }),
 });
 
@@ -209,6 +216,9 @@ async function main() {
   }
 
   console.log("Calling Claude via AWS Bedrock...");
+  console.log("Model ID:", CONFIG.MODEL_ID);
+  console.log("Region:", CONFIG.REGION);
+  console.log("Prompt length:", prompt.length);
 
   try {
     const content = await invokeClaudeBedrock(prompt);
