@@ -76,15 +76,22 @@ ${newTips}
 # tips/README.md
 ${tipsReadme}
 
-# 输出 JSON
-\`\`\`json
+# 输出格式要求
+返回一个有效的 JSON 对象。注意：
+- JSON 字符串中的换行符必须转义为 \\n
+- JSON 字符串中的双引号必须转义为 \\"
+- JSON 字符串中的反斜杠必须转义为 \\\\
+- 代码块中的反引号 \` 保持原样，但确保整个字符串是有效的 JSON
+
+输出格式：
 {
-  "updatedProtocol": "完整协议内容",
-  "updatedTipsReadme": "完整 README 内容", 
+  "updatedProtocol": "完整协议内容（所有换行转义为\\n）",
+  "updatedTipsReadme": "完整 README 内容（所有换行转义为\\n）", 
   "summary": "处理摘要",
   "securityIssues": []
 }
-\`\`\``;
+
+直接输出 JSON，不要用 markdown 代码块包裹。`;
 }
 
 async function main() {
@@ -127,25 +134,44 @@ async function main() {
 
   try {
     const content = await invokeClaudeBedrock(prompt);
+    console.log("Claude 返回内容前500字符:", content.substring(0, 500));
 
-    // 提取最外层的 JSON 代码块 - 匹配 ```json 开头到最后一个 ``` 结尾
+    // 提取 JSON：使用括号匹配法，避免嵌套代码块导致正则失败
     let jsonStr = content;
     
-    // 方法：找到 ```json 后，从末尾往前找最后一个 ```
-    const jsonStart = content.indexOf('```json');
-    if (jsonStart !== -1) {
-      const contentAfterStart = content.substring(jsonStart + 7); // 跳过 ```json
-      const lastBackticks = contentAfterStart.lastIndexOf('```');
-      if (lastBackticks !== -1) {
-        jsonStr = contentAfterStart.substring(0, lastBackticks).trim();
+    // 方法1：基于 JSON 结构提取（最可靠）
+    const firstOpen = content.indexOf('{');
+    const lastClose = content.lastIndexOf('}');
+    
+    if (firstOpen !== -1 && lastClose > firstOpen) {
+      jsonStr = content.substring(firstOpen, lastClose + 1);
+      console.log("基于括号提取 JSON，长度:", jsonStr.length);
+    } else {
+      // 方法2：回退到正则（使用 lastIndexOf 处理嵌套代码块）
+      const startMarker = "```json";
+      const endMarker = "```";
+      const startIndex = content.indexOf(startMarker);
+      
+      if (startIndex !== -1) {
+        const contentStart = startIndex + startMarker.length;
+        const endIndex = content.lastIndexOf(endMarker);
+        
+        if (endIndex > contentStart) {
+          jsonStr = content.substring(contentStart, endIndex).trim();
+          console.log("基于索引提取 JSON 块，长度:", jsonStr.length);
+        }
       }
     }
 
-    console.log("JSON 长度:", jsonStr.length);
+    let result;
+    try {
+      result = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      console.error("JSON 解析失败，原始内容:", jsonStr.substring(0, 1000));
+      throw parseErr;
+    }
 
-    const result = JSON.parse(jsonStr);
-
-    if (!result.updatedProtocol || !result.updatedProtocol.includes("<!-- ASINIT START -->")) {
+    if (!result.updatedProtocol.includes("<!-- ASINIT START -->")) {
       throw new Error("输出缺少 ASINIT 标记");
     }
 
