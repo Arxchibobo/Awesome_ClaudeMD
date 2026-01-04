@@ -28,7 +28,7 @@ async function main() {
   // 读取 tips README
   const tipsReadme = fs.readFileSync("tips/README.md", "utf-8");
 
-  const prompt = `你是一个文档整合助手。请帮我将新的 tips 整合到核心协议文档中。
+  const prompt = `你是一个文档整合助手。请帮我将新的 tips 整合到核心协议文档的"规范约束"部分。
 
 ## 当前核心协议文档
 \`\`\`markdown
@@ -47,9 +47,10 @@ ${tipsReadme}
 
 1. 分析新增的 tips 内容
 2. 判断每条 tip：
-   - 若与核心协议中已有条目重复 → 跳过或合并优化
-   - 若是新内容 → 添加到 \`<!-- ASINIT START -->\` 和 \`<!-- ASINIT END -->\` 标记之间的合适位置（通常是"项目注意事项"部分）
-3. 更新 tips/README.md 中的"已整合的 Tips"表格，添加已处理的文件记录
+   - 若与"规范约束"部分已有条目重复 → 跳过或合并优化
+   - 若是新内容 → 添加到 \`<!-- CONSTRAINTS START -->\` 和 \`<!-- CONSTRAINTS END -->\` 标记之间
+3. 新增的约束应该作为独立的小节（### 标题），与现有约束平级
+4. 更新 tips/README.md 中的"已整合的 Tips"表格，添加已处理的文件记录
 
 ## 输出格式
 
@@ -63,8 +64,9 @@ ${tipsReadme}
 \`\`\`
 
 注意：
+- 只修改 CONSTRAINTS START/END 之间的内容
+- 不要修改"标准执行流程"部分
 - 保持文档结构清晰
-- 不要破坏已有内容的格式
 - 只输出 JSON，不要有其他内容`;
 
   console.log("Calling Claude API...");
