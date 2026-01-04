@@ -70,6 +70,111 @@ cp asinit_AwosomeCLAUDE.md ~/.claude/commands/asinit.md
 - 通用开发模式的 4 步流程
 - 测试规范（英文注释、统一测试目录等）
 
+---
+
+## 团队协作 SOP
+
+### 角色分工
+
+| 角色 | 职责 |
+|------|------|
+| 维护者（你） | 审核 PR、整合 tips 到核心协议 |
+| 团队成员 | 提交避坑经验到 `tips/` 目录 |
+
+---
+
+### 团队成员：提交避坑经验
+
+**流程：**
+
+```
+1. 拉取最新代码
+   git pull origin main
+
+2. 在 tips/ 目录下新建 md 文件（禁止修改已有文件）
+   文件命名：<主题>-<你的名字>.md
+   例如：typescript-type-error-zhangsan.md
+
+3. 按模板填写内容（参考 tips/_template.md）
+
+4. 提交并推送
+   git add tips/你的文件.md
+   git commit -m "tips: 添加 xxx 避坑经验"
+   git push origin main
+```
+
+**注意事项：**
+- ❌ 禁止直接修改 `asinit_AwosomeCLAUDE.md`
+- ❌ 禁止修改他人的 tips 文件
+- ✅ 只能在 `tips/` 目录下新增 `.md` 文件
+
+---
+
+### 维护者：整合 Tips 到核心协议
+
+**触发时机：**
+- 定期（如每周）检查 `tips/` 目录
+- 或当 tips 积累到一定数量时
+
+**流程：**
+
+```
+1. 拉取最新代码
+   git pull origin main
+
+2. 使用 AI 整合（推荐 Claude Code）
+   执行以下 prompt：
+
+   ---
+   请帮我整合 tips/ 目录下的新增避坑经验到 asinit_AwosomeCLAUDE.md：
+   
+   1. 读取 tips/ 目录下所有 md 文件
+   2. 读取当前 asinit_AwosomeCLAUDE.md 内容
+   3. 智能判断每条 tip：
+      - 若与现有条目重复 → 跳过或合并
+      - 若是新内容 → 添加到合适位置
+   4. 更新 tips/README.md 中的"已整合的 Tips"表格
+   5. 保持协议结构清晰，避免冗余
+   ---
+
+3. 检查 AI 的修改，确认无误后提交
+   git add -A
+   git commit -m "整合 tips 到核心协议"
+   git push origin main
+
+4. （可选）删除已整合的 tips 文件，或保留作为历史记录
+```
+
+**为什么用 AI 整合？**
+- 避免人工整合导致的重复条目
+- AI 可以智能判断是"更新已有条目"还是"新增条目"
+- 保持协议文档结构一致性
+
+---
+
+### 团队成员：获取最新协议
+
+当维护者整合完成后，团队成员在各自项目中执行：
+
+```
+/asinit
+```
+
+即可自动更新本地项目的 `CLAUDE.md`。
+
+---
+
+## 目录结构
+
+```
+├── asinit_AwosomeCLAUDE.md   # 核心协议（维护者管理）
+├── README.md                  # 使用文档
+├── Subagent/                  # subagent 配置
+└── tips/                      # 团队避坑经验（成员贡献）
+    ├── README.md              # 贡献指南 + 已整合记录
+    ├── _template.md           # 模板文件
+    └── xxx-zhangsan.md        # 成员提交的 tips
+```
 
 ## License
 
