@@ -294,6 +294,94 @@ export class MainPanelProvider implements vscode.WebviewViewProvider {
       padding: 20px;
       color: var(--vscode-descriptionForeground);
     }
+
+    /* Tips 管理指南样式 */
+    .guide-section {
+      margin-top: 20px;
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .guide-header {
+      background-color: var(--vscode-editor-background);
+      padding: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .guide-header:hover {
+      background-color: var(--vscode-list-hoverBackground);
+    }
+
+    .guide-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .guide-toggle {
+      font-size: 18px;
+      transition: transform 0.2s;
+    }
+
+    .guide-toggle.expanded {
+      transform: rotate(180deg);
+    }
+
+    .guide-content {
+      padding: 16px;
+      background-color: var(--vscode-editor-background);
+      display: none;
+    }
+
+    .guide-content.visible {
+      display: block;
+    }
+
+    .guide-step {
+      margin-bottom: 20px;
+      padding: 12px;
+      background-color: var(--vscode-textCodeBlock-background);
+      border-left: 3px solid var(--vscode-textLink-foreground);
+      border-radius: 4px;
+    }
+
+    .guide-step h3 {
+      margin: 0 0 10px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--vscode-textLink-foreground);
+    }
+
+    .guide-step p {
+      margin: 6px 0;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .guide-code {
+      background-color: var(--vscode-editor-background);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: var(--vscode-editor-font-family);
+      font-size: 11px;
+      margin: 8px 0;
+      border: 1px solid var(--vscode-panel-border);
+      color: var(--vscode-textPreformat-foreground);
+    }
+
+    .guide-note {
+      background-color: var(--vscode-inputValidation-infoBackground);
+      border-left: 3px solid var(--vscode-inputValidation-infoBorder);
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 11px;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
@@ -365,7 +453,87 @@ export class MainPanelProvider implements vscode.WebviewViewProvider {
           <button onclick="updateProtocol()">🔄 更新协议</button>
           <button onclick="applyProtocol()">📥 应用到项目</button>
           <button class="secondary-btn" onclick="exportProtocol()">📤 导出协议</button>
-          <button class="secondary-btn" onclick="openTipsPanel()">📝 打开 Tips 管理</button>
+        </div>
+
+        <div class="guide-section">
+          <div class="guide-header" onclick="toggleGuide()">
+            <h2 class="guide-title">📝 Tips 管理指南</h2>
+            <span class="guide-toggle" id="guideToggle">▼</span>
+          </div>
+          <div class="guide-content" id="guideContent">
+
+            <div class="guide-step">
+              <h3>1️⃣ 查看待整合的 Tips</h3>
+              <p><strong>路径：</strong>项目根目录下的 <code>.tips/pending/</code> 文件夹</p>
+              <div class="guide-code">ls .tips/pending/</div>
+              <p>每个文件是一个独立的 Tip，包含标题、作者、内容等信息</p>
+            </div>
+
+            <div class="guide-step">
+              <h3>2️⃣ 查看已整合的 Tips</h3>
+              <p><strong>路径：</strong>项目根目录下的 <code>.tips/integrated/</code> 文件夹</p>
+              <div class="guide-code">ls .tips/integrated/</div>
+              <p>已经被整合到 CLAUDE.md 中的 Tips</p>
+            </div>
+
+            <div class="guide-step">
+              <h3>3️⃣ 创建新的 Tip</h3>
+              <p><strong>方法 1：</strong>使用命令面板</p>
+              <div class="guide-code">Ctrl+Shift+P → "ClaudeMD: 提交 Tip"</div>
+              <p><strong>方法 2：</strong>手动创建文件</p>
+              <div class="guide-code">.tips/pending/your-tip-name.md</div>
+              <p>文件格式：</p>
+              <div class="guide-code">---
+title: 你的 Tip 标题
+author: 你的名字
+createdAt: 2026-01-05T12:00:00Z
+---
+
+这里是 Tip 的内容...</div>
+            </div>
+
+            <div class="guide-step">
+              <h3>4️⃣ 编辑 Tip</h3>
+              <p>直接在 VS Code 中打开并编辑 Tip 文件：</p>
+              <div class="guide-code">code .tips/pending/your-tip.md</div>
+              <p>编辑完成后保存即可</p>
+            </div>
+
+            <div class="guide-step">
+              <h3>5️⃣ 删除 Tip</h3>
+              <p>直接删除对应的文件：</p>
+              <div class="guide-code">rm .tips/pending/your-tip.md</div>
+              <p>或在 VS Code 资源管理器中右键删除</p>
+            </div>
+
+            <div class="guide-step">
+              <h3>6️⃣ 整合所有 Tips</h3>
+              <p><strong>方法 1：</strong>使用命令面板</p>
+              <div class="guide-code">Ctrl+Shift+P → "ClaudeMD: 整合 Tips"</div>
+              <p><strong>方法 2：</strong>使用 Git Bash 命令</p>
+              <div class="guide-code">cd .tips && ../scripts/integrate.sh</div>
+              <div class="guide-note">
+                💡 <strong>提示：</strong>整合后，pending 中的 Tips 会被移动到 integrated 文件夹，并更新 CLAUDE.md 文件
+              </div>
+            </div>
+
+            <div class="guide-step">
+              <h3>7️⃣ Tips 文件夹结构</h3>
+              <div class="guide-code">.tips/
+├── pending/          # 待整合的 Tips
+│   ├── tip-1.md
+│   └── tip-2.md
+├── integrated/       # 已整合的 Tips
+│   └── tip-0.md
+└── scripts/          # 管理脚本
+    └── integrate.sh  # 整合脚本</div>
+            </div>
+
+            <div class="guide-note">
+              📌 <strong>快捷方式：</strong>当前有 <strong>\${tipsStats.pending} 个待整合 Tips</strong> 和 <strong>\${tipsStats.integrated} 个已整合 Tips</strong>
+            </div>
+
+          </div>
         </div>
 
         <div class="history">
@@ -400,6 +568,20 @@ export class MainPanelProvider implements vscode.WebviewViewProvider {
 
     function openTipsPanel() {
       vscode.postMessage({ command: 'openTipsPanel' });
+    }
+
+    // 切换指南展开/收起
+    function toggleGuide() {
+      const content = document.getElementById('guideContent');
+      const toggle = document.getElementById('guideToggle');
+
+      if (content.classList.contains('visible')) {
+        content.classList.remove('visible');
+        toggle.classList.remove('expanded');
+      } else {
+        content.classList.add('visible');
+        toggle.classList.add('expanded');
+      }
     }
 
     // 初始请求数据

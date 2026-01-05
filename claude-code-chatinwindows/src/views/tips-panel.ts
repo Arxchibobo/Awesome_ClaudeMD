@@ -400,8 +400,8 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
     <header>
       <h1>📝 Tips 管理</h1>
       <div class="header-actions">
-        <button onclick="refresh()" class="icon-btn secondary" title="刷新">⟳</button>
-        <button onclick="createTip()">+ 新建 Tip</button>
+        <button id="refreshBtn" class="icon-btn secondary" title="刷新">⟳</button>
+        <button id="createTipBtn">+ 新建 Tip</button>
       </div>
     </header>
 
@@ -417,10 +417,10 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
     </div>
 
     <div class="tabs">
-      <div class="tab active" data-tab="pending" onclick="switchTab('pending')">
+      <div class="tab active" data-tab="pending">
         📌 待整合
       </div>
-      <div class="tab" data-tab="integrated" onclick="switchTab('integrated')">
+      <div class="tab" data-tab="integrated">
         ✅ 已整合
       </div>
     </div>
@@ -431,6 +431,38 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
   <script>
     const vscode = acquireVsCodeApi();
     let currentData = null;
+    let allTips = []; // 存储所有 tips 数据
+
+    // HTML 转义函数，防止 XSS 和语法错误
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 初始化事件监听器
+    function initEventListeners() {
+      // 刷新按钮
+      const refreshBtn = document.getElementById('refreshBtn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', refresh);
+      }
+
+      // 创建 Tip 按钮
+      const createTipBtn = document.getElementById('createTipBtn');
+      if (createTipBtn) {
+        createTipBtn.addEventListener('click', createTip);
+      }
+
+      // 标签切换
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+          const tabName = this.getAttribute('data-tab');
+          switchTab(tabName);
+        });
+      });
+    }
 
     // 监听来自扩展的消息
     window.addEventListener('message', event => {
@@ -438,18 +470,38 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
       switch (message.command) {
         case 'updateData':
           currentData = message.data;
+          // 合并所有 tips 并添加索引
+          allTips = [
+            ...message.data.pendingTips.map((tip, idx) => ({ ...tip, _index: idx, _type: 'pending' })),
+            ...message.data.integratedTips.map((tip, idx) => ({ ...tip, _index: idx + message.data.pendingTips.length, _type: 'integrated' }))
+          ];
           renderData(message.data);
           break;
         case 'error':
-          // 显示错误信息
-          document.getElementById('content').innerHTML =
-            '<div class="empty-state">' +
-              '<div class="empty-state-icon">⚠️</div>' +
-              '<div class="empty-state-text" style="color: var(--vscode-errorForeground);">' +
-                message.message +
-              '</div>' +
-              '<button onclick="refresh()">重试</button>' +
-            '</div>';
+          // 显示错误信息（使用 DOM 操作避免 onclick 转义问题）
+          const contentDiv = document.getElementById('content');
+          contentDiv.innerHTML = '';
+
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'empty-state';
+
+          const icon = document.createElement('div');
+          icon.className = 'empty-state-icon';
+          icon.textContent = '⚠️';
+
+          const text = document.createElement('div');
+          text.className = 'empty-state-text';
+          text.style.color = 'var(--vscode-errorForeground)';
+          text.textContent = message.message;
+
+          const retryBtn = document.createElement('button');
+          retryBtn.textContent = '重试';
+          retryBtn.onclick = refresh;
+
+          errorDiv.appendChild(icon);
+          errorDiv.appendChild(text);
+          errorDiv.appendChild(retryBtn);
+          contentDiv.appendChild(errorDiv);
           break;
       }
     });
@@ -467,7 +519,10 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
       document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
       });
-      document.querySelector('.tab[data-tab="' + tabName + '"]').classList.add('active');
+      const targetTab = document.querySelector('[data-tab="' + tabName + '"]');
+      if (targetTab) {
+        targetTab.classList.add('active');
+      }
 
       // 渲染对应内容
       if (currentData) {
@@ -486,31 +541,69 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
       renderTabContent(activeTab, data);
     }
 
-    // 渲染标签页内容
+    // 渲染标签页内容（使用 DOM 操作避免字符串拼接问题）
     function renderTabContent(tabName, data) {
       const tips = tabName === 'pending' ? data.pendingTips : data.integratedTips;
       const contentDiv = document.getElementById('content');
 
+      // 清空内容
+      contentDiv.innerHTML = '';
+
       if (tips.length === 0) {
-        const icon = tabName === 'pending' ? '📭' : '✨';
-        const text = tabName === 'pending'
+        // 空状态
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'empty-state';
+
+        const icon = document.createElement('div');
+        icon.className = 'empty-state-icon';
+        icon.textContent = tabName === 'pending' ? '📭' : '✨';
+
+        const text = document.createElement('div');
+        text.className = 'empty-state-text';
+        text.innerHTML = tabName === 'pending'
           ? '暂无待整合的 Tips<br>点击上方按钮创建新的 Tip'
           : '还没有已整合的 Tips<br>提交一些 Tips 并运行整合吧';
-        const button = tabName === 'pending'
-          ? '<button onclick="createTip()">创建 Tip</button>'
-          : '<button onclick="integrateTips()">整合 Tips</button>';
 
-        contentDiv.innerHTML = '<div class="empty-state">' +
-          '<div class="empty-state-icon">' + icon + '</div>' +
-          '<div class="empty-state-text">' + text + '</div>' +
-          button +
-          '</div>';
+        const button = document.createElement('button');
+        button.textContent = tabName === 'pending' ? '创建 Tip' : '整合 Tips';
+        button.onclick = tabName === 'pending' ? createTip : integrateTips;
+
+        emptyDiv.appendChild(icon);
+        emptyDiv.appendChild(text);
+        emptyDiv.appendChild(button);
+        contentDiv.appendChild(emptyDiv);
         return;
       }
 
-      // 生成 tips 卡片列表
-      const tipCards = tips.map(tip => {
-        // 构建元数据
+      // 创建列表容器
+      const listDiv = document.createElement('div');
+      listDiv.className = 'tips-list';
+
+      // 渲染每个 tip 卡片
+      tips.forEach((tip, localIdx) => {
+        // 查找全局索引
+        const globalIndex = allTips.findIndex(t =>
+          t.filePath === tip.filePath && t.title === tip.title
+        );
+
+        // 创建卡片
+        const card = document.createElement('div');
+        card.className = 'tip-card';
+        card.setAttribute('data-tip-index', globalIndex);
+
+        // 卡片头部
+        const header = document.createElement('div');
+        header.className = 'tip-header';
+
+        // 左侧信息
+        const leftDiv = document.createElement('div');
+
+        const title = document.createElement('h3');
+        title.className = 'tip-title';
+        title.textContent = tip.title;
+
+        const meta = document.createElement('div');
+        meta.className = 'tip-meta';
         let metaText = '👤 ' + tip.author;
         if (tip.createdAt) {
           metaText += ' • ' + new Date(tip.createdAt).toLocaleDateString('zh-CN');
@@ -518,35 +611,59 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
         if (tip.integratedAt) {
           metaText += ' • 整合于 ' + new Date(tip.integratedAt).toLocaleDateString('zh-CN');
         }
+        meta.textContent = metaText;
 
-        // 构建操作按钮
-        const tipDataJson = JSON.stringify(tip).replace(/'/g, "\\'");
-        let actionButtons = '<button onclick=\'viewTip(' + tipDataJson + ')\'>查看</button>';
+        leftDiv.appendChild(title);
+        leftDiv.appendChild(meta);
+
+        // 操作按钮
+        const actions = document.createElement('div');
+        actions.className = 'tip-actions';
+
+        const viewBtn = document.createElement('button');
+        viewBtn.textContent = '查看';
+        viewBtn.onclick = () => viewTip(globalIndex);
+        actions.appendChild(viewBtn);
+
         if (tabName === 'pending') {
-          actionButtons += '<button onclick=\'editTip(' + tipDataJson + ')\'>编辑</button>';
-          actionButtons += '<button onclick=\'deleteTip(' + tipDataJson + ')\' class="secondary">删除</button>';
+          const editBtn = document.createElement('button');
+          editBtn.textContent = '编辑';
+          editBtn.onclick = () => editTip(globalIndex);
+          actions.appendChild(editBtn);
+
+          const delBtn = document.createElement('button');
+          delBtn.textContent = '删除';
+          delBtn.className = 'secondary';
+          delBtn.onclick = () => deleteTip(globalIndex);
+          actions.appendChild(delBtn);
         }
 
-        // 构建卡片 HTML
-        return '<div class="tip-card">' +
-          '<div class="tip-header">' +
-            '<div>' +
-              '<h3 class="tip-title">' + tip.title + '</h3>' +
-              '<div class="tip-meta">' + metaText + '</div>' +
-            '</div>' +
-            '<div class="tip-actions">' + actionButtons + '</div>' +
-          '</div>' +
-          '<div class="tip-preview">' + tip.content.substring(0, 150).replace(/\n/g, ' ') + '...</div>' +
-        '</div>';
-      }).join('');
+        header.appendChild(leftDiv);
+        header.appendChild(actions);
 
-      // 构建完整 HTML
-      let html = '<div class="tips-list">' + tipCards + '</div>';
+        // 预览内容
+        const preview = document.createElement('div');
+        preview.className = 'tip-preview';
+        const previewText = tip.content.substring(0, 150).replace(/\\n/g, ' ');
+        preview.textContent = previewText + '...';
+
+        // 组装卡片
+        card.appendChild(header);
+        card.appendChild(preview);
+        listDiv.appendChild(card);
+      });
+
+      contentDiv.appendChild(listDiv);
+
+      // 添加整合按钮
       if (tabName === 'pending' && tips.length > 0) {
-        html += '<button onclick="integrateTips()" style="margin-top: 15px; width: 100%;">🤖 整合所有 Tips</button>';
+        const integrateBtn = document.createElement('button');
+        integrateBtn.textContent = '🤖 整合所有 Tips';
+        integrateBtn.style.marginTop = '15px';
+        integrateBtn.style.width = '100%';
+        integrateBtn.onclick = integrateTips;
+        contentDiv.appendChild(integrateBtn);
       }
-
-      contentDiv.innerHTML = html;
     }
 
     // 命令函数
@@ -555,17 +672,32 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
       vscode.postMessage({ command: 'createTip' });
     }
 
-    function viewTip(tip) {
+    function viewTip(index) {
+      const tip = allTips[index];
+      if (!tip) {
+        console.error('[TipsPanel] 未找到 Tip, index:', index);
+        return;
+      }
       console.log('[TipsPanel] 查看 Tip:', tip.title);
       vscode.postMessage({ command: 'viewTip', tip });
     }
 
-    function editTip(tip) {
+    function editTip(index) {
+      const tip = allTips[index];
+      if (!tip) {
+        console.error('[TipsPanel] 未找到 Tip, index:', index);
+        return;
+      }
       console.log('[TipsPanel] 编辑 Tip:', tip.title);
       vscode.postMessage({ command: 'editTip', tip });
     }
 
-    function deleteTip(tip) {
+    function deleteTip(index) {
+      const tip = allTips[index];
+      if (!tip) {
+        console.error('[TipsPanel] 未找到 Tip, index:', index);
+        return;
+      }
       console.log('[TipsPanel] 删除 Tip:', tip.title);
       vscode.postMessage({ command: 'deleteTip', tip });
     }
@@ -574,6 +706,9 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
       console.log('[TipsPanel] 整合 Tips');
       vscode.postMessage({ command: 'integrateTips' });
     }
+
+    // 页面加载完成后初始化
+    initEventListeners();
 
     // 初始请求数据
     refresh();
