@@ -15,8 +15,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:claudemd.openMainPanel",
-    "onCommand:claudemd.test"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
