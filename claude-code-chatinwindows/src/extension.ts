@@ -74,36 +74,37 @@ export function activate(context: vscode.ExtensionContext) {
     });
   }
 
-  // 即使初始化失败也注册基本命令
+  // ===== 关键：先注册基础命令，确保即使出错也能用 =====
+  log('[ClaudeMD] 注册基础命令（不依赖仓库）...');
+
+  // 注册 openMainPanel 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('claudemd.openMainPanel', async () => {
+      log('[ClaudeMD] openMainPanel 命令被调用');
+      vscode.commands.executeCommand('workbench.view.extension.claudemd-sidebar');
+    })
+  );
+
+  // 注册 openTipsPanel 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('claudemd.openTipsPanel', async () => {
+      log('[ClaudeMD] openTipsPanel 命令被调用');
+      vscode.commands.executeCommand('claudemd.tipsPanel.focus');
+    })
+  );
+
+  // 注册测试命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('claudemd.test', () => {
+      vscode.window.showInformationMessage('🎉 ClaudeMD 插件工作正常！');
+      log('[ClaudeMD] 测试命令被调用');
+    })
+  );
+
+  log('[ClaudeMD] ✅ 基础命令已注册');
+
+  // ===== 然后在 try 块中初始化其他功能 =====
   try {
-    // 先注册 openMainPanel 命令（基础命令，不依赖仓库）
-    log('[ClaudeMD] 注册 openMainPanel 命令...');
-    context.subscriptions.push(
-      vscode.commands.registerCommand('claudemd.openMainPanel', async () => {
-        log('[ClaudeMD] openMainPanel 命令被调用');
-        // 打开主面板视图
-        vscode.commands.executeCommand('workbench.view.extension.claudemd-sidebar');
-      })
-    );
-
-    // 注册 openTipsPanel 命令
-    log('[ClaudeMD] 注册 openTipsPanel 命令...');
-    context.subscriptions.push(
-      vscode.commands.registerCommand('claudemd.openTipsPanel', async () => {
-        log('[ClaudeMD] openTipsPanel 命令被调用');
-        // 打开 Tips 面板视图（在侧边栏）
-        vscode.commands.executeCommand('claudemd.tipsPanel.focus');
-      })
-    );
-
-    // 注册测试命令
-    log('[ClaudeMD] 注册测试命令...');
-    context.subscriptions.push(
-      vscode.commands.registerCommand('claudemd.test', () => {
-        vscode.window.showInformationMessage('🎉 ClaudeMD 插件工作正常！');
-        log('[ClaudeMD] 测试命令被调用');
-      })
-    );
 
     // 只有当管理器初始化成功时才注册需要它们的功能
     if (repository && syncManager && claudeMDManager && tipsManager) {
