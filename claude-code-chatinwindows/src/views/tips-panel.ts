@@ -442,15 +442,14 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
           break;
         case 'error':
           // 显示错误信息
-          document.getElementById('content').innerHTML = \`
-            <div class="empty-state">
-              <div class="empty-state-icon">⚠️</div>
-              <div class="empty-state-text" style="color: var(--vscode-errorForeground);">
-                \${message.message}
-              </div>
-              <button onclick="refresh()">重试</button>
-            </div>
-          \`;
+          document.getElementById('content').innerHTML =
+            '<div class="empty-state">' +
+              '<div class="empty-state-icon">⚠️</div>' +
+              '<div class="empty-state-text" style="color: var(--vscode-errorForeground);">' +
+                message.message +
+              '</div>' +
+              '<button onclick="refresh()">重试</button>' +
+            '</div>';
           break;
       }
     });
@@ -468,7 +467,7 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
       document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
       });
-      document.querySelector(\`.tab[data-tab="\${tabName}"]\`).classList.add('active');
+      document.querySelector('.tab[data-tab="' + tabName + '"]').classList.add('active');
 
       // 渲染对应内容
       if (currentData) {
@@ -493,51 +492,59 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
       const contentDiv = document.getElementById('content');
 
       if (tips.length === 0) {
-        contentDiv.innerHTML = \`
-          <div class="empty-state">
-            <div class="empty-state-icon">\${tabName === 'pending' ? '📭' : '✨'}</div>
-            <div class="empty-state-text">
-              \${tabName === 'pending'
-                ? '暂无待整合的 Tips<br>点击上方按钮创建新的 Tip'
-                : '还没有已整合的 Tips<br>提交一些 Tips 并运行整合吧'}
-            </div>
-            \${tabName === 'pending'
-              ? '<button onclick="createTip()">创建 Tip</button>'
-              : '<button onclick="integrateTips()">整合 Tips</button>'}
-          </div>
-        \`;
+        const icon = tabName === 'pending' ? '📭' : '✨';
+        const text = tabName === 'pending'
+          ? '暂无待整合的 Tips<br>点击上方按钮创建新的 Tip'
+          : '还没有已整合的 Tips<br>提交一些 Tips 并运行整合吧';
+        const button = tabName === 'pending'
+          ? '<button onclick="createTip()">创建 Tip</button>'
+          : '<button onclick="integrateTips()">整合 Tips</button>';
+
+        contentDiv.innerHTML = '<div class="empty-state">' +
+          '<div class="empty-state-icon">' + icon + '</div>' +
+          '<div class="empty-state-text">' + text + '</div>' +
+          button +
+          '</div>';
         return;
       }
 
-      const html = \`
-        <div class="tips-list">
-          \${tips.map(tip => \`
-            <div class="tip-card">
-              <div class="tip-header">
-                <div>
-                  <h3 class="tip-title">\${tip.title}</h3>
-                  <div class="tip-meta">
-                    👤 \${tip.author}
-                    \${tip.createdAt ? \`• \${new Date(tip.createdAt).toLocaleDateString('zh-CN')}\` : ''}
-                    \${tip.integratedAt ? \`• 整合于 \${new Date(tip.integratedAt).toLocaleDateString('zh-CN')}\` : ''}
-                  </div>
-                </div>
-                <div class="tip-actions">
-                  <button onclick='viewTip(\${JSON.stringify(tip)})'>查看</button>
-                  \${tabName === 'pending'
-                    ? \`<button onclick='editTip(\${JSON.stringify(tip)})'>编辑</button>
-                       <button onclick='deleteTip(\${JSON.stringify(tip)})' class="secondary">删除</button>\`
-                    : ''}
-                </div>
-              </div>
-              <div class="tip-preview">\${tip.content.substring(0, 150).replace(/\n/g, ' ')}...</div>
-            </div>
-          \`).join('')}
-        </div>
-        \${tabName === 'pending' && tips.length > 0
-          ? '<button onclick="integrateTips()" style="margin-top: 15px; width: 100%;">🤖 整合所有 Tips</button>'
-          : ''}
-      \`;
+      // 生成 tips 卡片列表
+      const tipCards = tips.map(tip => {
+        // 构建元数据
+        let metaText = '👤 ' + tip.author;
+        if (tip.createdAt) {
+          metaText += ' • ' + new Date(tip.createdAt).toLocaleDateString('zh-CN');
+        }
+        if (tip.integratedAt) {
+          metaText += ' • 整合于 ' + new Date(tip.integratedAt).toLocaleDateString('zh-CN');
+        }
+
+        // 构建操作按钮
+        const tipDataJson = JSON.stringify(tip).replace(/'/g, "\\'");
+        let actionButtons = '<button onclick=\'viewTip(' + tipDataJson + ')\'>查看</button>';
+        if (tabName === 'pending') {
+          actionButtons += '<button onclick=\'editTip(' + tipDataJson + ')\'>编辑</button>';
+          actionButtons += '<button onclick=\'deleteTip(' + tipDataJson + ')\' class="secondary">删除</button>';
+        }
+
+        // 构建卡片 HTML
+        return '<div class="tip-card">' +
+          '<div class="tip-header">' +
+            '<div>' +
+              '<h3 class="tip-title">' + tip.title + '</h3>' +
+              '<div class="tip-meta">' + metaText + '</div>' +
+            '</div>' +
+            '<div class="tip-actions">' + actionButtons + '</div>' +
+          '</div>' +
+          '<div class="tip-preview">' + tip.content.substring(0, 150).replace(/\n/g, ' ') + '...</div>' +
+        '</div>';
+      }).join('');
+
+      // 构建完整 HTML
+      let html = '<div class="tips-list">' + tipCards + '</div>';
+      if (tabName === 'pending' && tips.length > 0) {
+        html += '<button onclick="integrateTips()" style="margin-top: 15px; width: 100%;">🤖 整合所有 Tips</button>';
+      }
 
       contentDiv.innerHTML = html;
     }
