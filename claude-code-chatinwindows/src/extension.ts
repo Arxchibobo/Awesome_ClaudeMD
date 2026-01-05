@@ -16,10 +16,24 @@ import { TipsPanelProvider } from './views/tips-panel';
  * 完整功能版本 - 集成所有管理器和命令
  */
 export function activate(context: vscode.ExtensionContext) {
-  console.log('[ClaudeMD] === 插件激活开始 ===');
+  // 创建输出通道用于日志
+  const outputChannel = vscode.window.createOutputChannel('ClaudeMD Manager');
+  outputChannel.show();
+
+  const log = (message: string) => {
+    console.log(message);
+    outputChannel.appendLine(message);
+  };
+
+  log('[ClaudeMD] === 插件激活开始 ===');
+  log(`[ClaudeMD] VS Code 版本: ${vscode.version}`);
+  log(`[ClaudeMD] 扩展路径: ${context.extensionPath}`);
+
+  // 立即显示一个通知，证明激活函数被调用
+  vscode.window.showInformationMessage('🚀 ClaudeMD 激活函数已被调用！');
 
   // 初始化配置管理器（这个不会失败）
-  console.log('[ClaudeMD] 初始化配置管理器...');
+  log('[ClaudeMD] 初始化配置管理器...');
   const config = new ConfigManager();
 
   // 尝试初始化 Git 仓库（可能失败）
@@ -30,23 +44,24 @@ export function activate(context: vscode.ExtensionContext) {
   let repoPath: string = config.getRepositoryPath();
 
   try {
-    console.log('[ClaudeMD] 初始化 Git 仓库...');
-    console.log('[ClaudeMD] 仓库路径:', repoPath);
+    log('[ClaudeMD] 初始化 Git 仓库...');
+    log('[ClaudeMD] 仓库路径: ' + repoPath);
     repository = new GitRepository(repoPath);
 
     // 3. 初始化同步管理器
-    console.log('[ClaudeMD] 初始化同步管理器...');
+    log('[ClaudeMD] 初始化同步管理器...');
     syncManager = new SyncManager(repository);
 
     // 4. 初始化 CLAUDE.md 管理器
-    console.log('[ClaudeMD] 初始化 CLAUDE.md 管理器...');
+    log('[ClaudeMD] 初始化 CLAUDE.md 管理器...');
     const templatePath = path.join(repoPath, 'asinit_AwosomeCLAUDE.md');
     claudeMDManager = new ClaudeMDManager(repository, templatePath);
 
     // 5. 初始化 Tips 管理器
-    console.log('[ClaudeMD] 初始化 Tips 管理器...');
+    log('[ClaudeMD] 初始化 Tips 管理器...');
     tipsManager = new TipsManager(repository);
   } catch (initError: any) {
+    log('[ClaudeMD] 初始化失败: ' + initError.message);
     console.error('[ClaudeMD] 初始化失败:', initError);
     vscode.window.showWarningMessage(
       `ClaudeMD 初始化失败: ${initError.message}\n` +
@@ -62,27 +77,31 @@ export function activate(context: vscode.ExtensionContext) {
   // 即使初始化失败也注册基本命令
   try {
     // 先注册 openMainPanel 命令（基础命令，不依赖仓库）
-    console.log('[ClaudeMD] 注册 openMainPanel 命令...');
+    log('[ClaudeMD] 注册 openMainPanel 命令...');
     context.subscriptions.push(
       vscode.commands.registerCommand('claudemd.openMainPanel', async () => {
+        log('[ClaudeMD] openMainPanel 命令被调用');
         // 打开主面板视图
         vscode.commands.executeCommand('workbench.view.extension.claudemd-sidebar');
       })
     );
 
     // 注册 openTipsPanel 命令
-    console.log('[ClaudeMD] 注册 openTipsPanel 命令...');
+    log('[ClaudeMD] 注册 openTipsPanel 命令...');
     context.subscriptions.push(
       vscode.commands.registerCommand('claudemd.openTipsPanel', async () => {
+        log('[ClaudeMD] openTipsPanel 命令被调用');
         // 打开 Tips 面板视图（在侧边栏）
         vscode.commands.executeCommand('claudemd.tipsPanel.focus');
       })
     );
 
     // 注册测试命令
+    log('[ClaudeMD] 注册测试命令...');
     context.subscriptions.push(
       vscode.commands.registerCommand('claudemd.test', () => {
         vscode.window.showInformationMessage('🎉 ClaudeMD 插件工作正常！');
+        log('[ClaudeMD] 测试命令被调用');
       })
     );
 
