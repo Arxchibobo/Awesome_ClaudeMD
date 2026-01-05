@@ -1,0 +1,151 @@
+{
+  "name": "claudemd-manager",
+  "displayName": "ClaudeMD Manager",
+  "description": "CLAUDE.md 团队协议管理工具",
+  "version": "1.0.0",
+  "publisher": "claudemd-team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LeonSGP43/Awesome_ClaudeMD.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:claudemd.openMainPanel",
+    "onCommand:claudemd.test"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claudemd-sidebar",
+          "title": "ClaudeMD",
+          "icon": "$(cloud)"
+        }
+      ]
+    },
+    "views": {
+      "claudemd-sidebar": [
+        {
+          "type": "webview",
+          "id": "claudemd.mainPanel",
+          "name": "主面板"
+        },
+        {
+          "type": "webview",
+          "id": "claudemd.tipsPanel",
+          "name": "Tips 管理"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "claudemd.openMainPanel",
+        "title": "打开主面板",
+        "category": "ClaudeMD"
+      },
+      {
+        "command": "claudemd.updateProtocol",
+        "title": "更新协议",
+        "category": "ClaudeMD"
+      },
+      {
+        "command": "claudemd.applyProtocol",
+        "title": "应用协议到当前项目",
+        "category": "ClaudeMD"
+      },
+      {
+        "command": "claudemd.exportProtocol",
+        "title": "导出 CLAUDE.md",
+        "category": "ClaudeMD"
+      },
+      {
+        "command": "claudemd.openTipsPanel",
+        "title": "打开 Tips 管理",
+        "category": "ClaudeMD"
+      },
+      {
+        "command": "claudemd.submitTip",
+        "title": "提交新 Tip",
+        "category": "ClaudeMD"
+      },
+      {
+        "command": "claudemd.about",
+        "title": "关于",
+        "category": "ClaudeMD"
+      },
+      {
+        "command": "claudemd.test",
+        "title": "测试插件",
+        "category": "ClaudeMD"
+      }
+    ],
+    "configuration": {
+      "title": "ClaudeMD",
+      "properties": {
+        "claudemd.repositoryPath": {
+          "type": "string",
+          "default": "",
+          "description": "Awesome_ClaudeMD 仓库路径（默认: ~/Awesome_ClaudeMD）"
+        },
+        "claudemd.autoUpdate": {
+          "type": "boolean",
+          "default": true,
+          "description": "启动时自动检查协议更新"
+        },
+        "claudemd.updateInterval": {
+          "type": "number",
+          "default": 3600,
+          "description": "自动更新检查间隔（秒）"
+        },
+        "claudemd.aws.region": {
+          "type": "string",
+          "default": "us-west-1",
+          "description": "AWS Bedrock 区域"
+        },
+        "claudemd.localLLM.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用本地 LLM（离线模式）"
+        },
+        "claudemd.localLLM.endpoint": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "本地 LLM API 端点（Ollama）"
+        },
+        "claudemd.localLLM.model": {
+          "type": "string",
+          "default": "llama2",
+          "description": "本地 LLM 模型名称"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0"
+  },
+  "dependencies": {
+    "simple-git": "^3.21.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.490.0"
+  }
+}

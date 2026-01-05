@@ -1,0 +1,63 @@
+import * as vscode from 'vscode';
+
+/**
+ * 插件激活 - 最小可行版本（用于调试）
+ * 只包含最基础的功能，验证能否正常激活
+ */
+export function activate(context: vscode.ExtensionContext) {
+  console.log('[ClaudeMD] === 激活开始（最小版本）===');
+
+  try {
+    // 1. 创建状态栏（最简单的 UI 元素）
+    console.log('[ClaudeMD] 创建状态栏...');
+    const statusBarItem = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Right,
+      100
+    );
+    statusBarItem.text = "$(cloud) ClaudeMD";
+    statusBarItem.tooltip = "ClaudeMD Manager - 点击测试";
+    statusBarItem.command = 'claudemd.test';
+    statusBarItem.show();
+    context.subscriptions.push(statusBarItem);
+    console.log('[ClaudeMD] 状态栏创建成功');
+
+    // 2. 注册测试命令（最简单的命令）
+    console.log('[ClaudeMD] 注册测试命令...');
+    context.subscriptions.push(
+      vscode.commands.registerCommand('claudemd.test', () => {
+        vscode.window.showInformationMessage('🎉 ClaudeMD 插件工作正常！');
+        console.log('[ClaudeMD] 测试命令执行成功');
+      })
+    );
+    console.log('[ClaudeMD] 测试命令注册成功');
+
+    // 3. 注册原有的主面板命令（用于兼容）
+    console.log('[ClaudeMD] 注册主面板命令...');
+    context.subscriptions.push(
+      vscode.commands.registerCommand('claudemd.openMainPanel', () => {
+        vscode.window.showInformationMessage(
+          '插件已成功激活！完整功能将在后续版本恢复。\n\n当前版本：最小可行插件（调试版）',
+          '确定'
+        );
+        console.log('[ClaudeMD] 主面板命令执行（简化版）');
+      })
+    );
+    console.log('[ClaudeMD] 主面板命令注册成功');
+
+    console.log('[ClaudeMD] === 激活完成 ===');
+
+    // 显示激活成功的通知
+    vscode.window.showInformationMessage('ClaudeMD Manager 已激活（最小版本）');
+
+  } catch (error) {
+    console.error('[ClaudeMD] 激活过程中发生错误:', error);
+    vscode.window.showErrorMessage(`ClaudeMD 激活失败: ${error}`);
+  }
+}
+
+/**
+ * 插件停用
+ */
+export function deactivate() {
+  console.log('[ClaudeMD] 插件停用');
+}
