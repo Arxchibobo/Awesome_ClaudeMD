@@ -76,14 +76,23 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
    * 更新数据
    */
   private async _updateData() {
+    console.log('[TipsPanel] 开始更新数据...');
+
     if (!this._view) {
+      console.log('[TipsPanel] _view 不存在，跳过更新');
       return;
     }
 
     try {
+      console.log('[TipsPanel] 获取待整合 Tips...');
       const pendingTips = await this.tipsManager.getPendingTips();
-      const integratedTips = await this.tipsManager.getIntegratedTips();
+      console.log(`[TipsPanel] 获取到 ${pendingTips.length} 个待整合 Tips`);
 
+      console.log('[TipsPanel] 获取已整合 Tips...');
+      const integratedTips = await this.tipsManager.getIntegratedTips();
+      console.log(`[TipsPanel] 获取到 ${integratedTips.length} 个已整合 Tips`);
+
+      console.log('[TipsPanel] 发送数据到 webview...');
       this._view.webview.postMessage({
         command: 'updateData',
         data: {
@@ -91,13 +100,17 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
           integratedTips
         }
       });
+      console.log('[TipsPanel] ✅ 数据更新成功');
     } catch (error: any) {
-      console.error('[TipsPanel] 更新数据失败:', error);
+      console.error('[TipsPanel] ❌ 更新数据失败:', error);
+      console.error('[TipsPanel] 错误堆栈:', error.stack);
+
       // 向 webview 发送错误消息
       this._view.webview.postMessage({
         command: 'error',
         message: `加载失败: ${error.message || '未知错误'}`
       });
+
       // 也显示 VS Code 通知
       vscode.window.showErrorMessage(`Tips 面板加载失败: ${error.message}`);
     }
