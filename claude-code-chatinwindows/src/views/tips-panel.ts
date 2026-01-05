@@ -39,25 +39,32 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
 
     // 监听消息
     webviewView.webview.onDidReceiveMessage(async (message) => {
-      switch (message.command) {
-        case 'refresh':
-          await this._updateData();
-          break;
-        case 'viewTip':
-          await this._viewTip(message.tip);
-          break;
-        case 'editTip':
-          await this._editTip(message.tip);
-          break;
-        case 'deleteTip':
-          await this._deleteTip(message.tip);
-          break;
-        case 'createTip':
-          vscode.commands.executeCommand('claudemd.submitTip');
-          break;
-        case 'integrateTips':
-          vscode.commands.executeCommand('claudemd.integrateTips');
-          break;
+      console.log('[TipsPanel] 收到消息:', message.command);
+
+      try {
+        switch (message.command) {
+          case 'refresh':
+            await this._updateData();
+            break;
+          case 'viewTip':
+            await this._viewTip(message.tip);
+            break;
+          case 'editTip':
+            await this._editTip(message.tip);
+            break;
+          case 'deleteTip':
+            await this._deleteTip(message.tip);
+            break;
+          case 'createTip':
+            vscode.commands.executeCommand('claudemd.submitTip');
+            break;
+          case 'integrateTips':
+            vscode.commands.executeCommand('claudemd.integrateTips');
+            break;
+        }
+      } catch (error: any) {
+        console.error('[TipsPanel] 处理消息失败:', error);
+        vscode.window.showErrorMessage(`操作失败: ${error.message}`);
       }
     });
 
@@ -84,8 +91,15 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
           integratedTips
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('[TipsPanel] 更新数据失败:', error);
+      // 向 webview 发送错误消息
+      this._view.webview.postMessage({
+        command: 'error',
+        message: `加载失败: ${error.message || '未知错误'}`
+      });
+      // 也显示 VS Code 通知
+      vscode.window.showErrorMessage(`Tips 面板加载失败: ${error.message}`);
     }
   }
 
@@ -413,11 +427,25 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
           currentData = message.data;
           renderData(message.data);
           break;
+        case 'error':
+          // 显示错误信息
+          document.getElementById('content').innerHTML = \`
+            <div class="empty-state">
+              <div class="empty-state-icon">⚠️</div>
+              <div class="empty-state-text" style="color: var(--vscode-errorForeground);">
+                \${message.message}
+              </div>
+              <button onclick="refresh()">重试</button>
+            </div>
+          \`;
+          break;
       }
     });
 
     // 刷新数据
     function refresh() {
+      console.log('[TipsPanel] 刷新数据...');
+      document.getElementById('content').innerHTML = '<div class="loading">加载中...</div>';
       vscode.postMessage({ command: 'refresh' });
     }
 
@@ -503,22 +531,27 @@ export class TipsPanelProvider implements vscode.WebviewViewProvider {
 
     // 命令函数
     function createTip() {
+      console.log('[TipsPanel] 创建新 Tip');
       vscode.postMessage({ command: 'createTip' });
     }
 
     function viewTip(tip) {
+      console.log('[TipsPanel] 查看 Tip:', tip.title);
       vscode.postMessage({ command: 'viewTip', tip });
     }
 
     function editTip(tip) {
+      console.log('[TipsPanel] 编辑 Tip:', tip.title);
       vscode.postMessage({ command: 'editTip', tip });
     }
 
     function deleteTip(tip) {
+      console.log('[TipsPanel] 删除 Tip:', tip.title);
       vscode.postMessage({ command: 'deleteTip', tip });
     }
 
     function integrateTips() {
+      console.log('[TipsPanel] 整合 Tips');
       vscode.postMessage({ command: 'integrateTips' });
     }
 
