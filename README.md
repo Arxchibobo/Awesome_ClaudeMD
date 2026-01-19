@@ -106,6 +106,27 @@ git push
 
 ---
 
+## 可复用模板
+
+`templates/` 目录提供经过验证的 CLAUDE.md 模板，可直接复制使用：
+
+| 模板 | 适用场景 |
+|------|----------|
+| [team-claude-v1.md](templates/team-claude-v1.md) | 团队协作项目 |
+
+### 使用模板
+
+```bash
+# 复制到你的项目
+cp templates/team-claude-v1.md /your/project/CLAUDE.md
+
+# 编辑自定义区域（搜索 [YOUR_ 占位符）
+```
+
+详见 [templates/README.md](templates/README.md)
+
+---
+
 ## 仓库配置
 
 Settings → Secrets → Actions 添加：
