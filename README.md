@@ -15,7 +15,7 @@
 
 ```bash
 # 安装（只需一次）
-git clone https://github.com/LeonSGP43/Awesome_ClaudeMD.git ~/Awesome_ClaudeMD
+git clone https://github.com/Arxchibobo/Awesome_ClaudeMD.git ~/Awesome_ClaudeMD
 ln -sf ~/Awesome_ClaudeMD/asinit_AwosomeCLAUDE.md ~/.claude/commands/asinit.md
 
 # 使用（任意项目中）
@@ -66,7 +66,7 @@ ln -sf ~/Awesome_ClaudeMD/asinit_AwosomeCLAUDE.md ~/.claude/commands/asinit.md
 ### macOS / Linux
 
 ```bash
-git clone https://github.com/LeonSGP43/Awesome_ClaudeMD.git ~/Awesome_ClaudeMD
+git clone https://github.com/Arxchibobo/Awesome_ClaudeMD.git ~/Awesome_ClaudeMD
 mkdir -p ~/.claude/commands
 ln -sf ~/Awesome_ClaudeMD/asinit_AwosomeCLAUDE.md ~/.claude/commands/asinit.md
 ```
@@ -74,7 +74,7 @@ ln -sf ~/Awesome_ClaudeMD/asinit_AwosomeCLAUDE.md ~/.claude/commands/asinit.md
 ### Windows (PowerShell 管理员)
 
 ```powershell
-git clone https://github.com/LeonSGP43/Awesome_ClaudeMD.git "$env:USERPROFILE\Awesome_ClaudeMD"
+git clone https://github.com/Arxchibobo/Awesome_ClaudeMD.git "$env:USERPROFILE\Awesome_ClaudeMD"
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\commands"
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\commands\asinit.md" -Target "$env:USERPROFILE\Awesome_ClaudeMD\asinit_AwosomeCLAUDE.md" -Force
 ```
