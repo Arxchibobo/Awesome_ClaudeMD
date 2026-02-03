@@ -56,8 +56,16 @@ export class ClaudeMDManager {
     }
 
     try {
-      // 读取新协议
-      const newProtocol = await this.readTemplateProtocol();
+      // 读取新协议并提取核心部分
+      const templateContent = await this.readTemplateProtocol();
+      const parsedTemplate = ProtocolParser.parse(templateContent);
+
+      if (!parsedTemplate.asinitSection) {
+        NotificationManager.error('模板协议无效：未找到 ASINIT 标记');
+        return false;
+      }
+
+      const newProtocol = parsedTemplate.asinitSection;
 
       // 检查是否已存在 CLAUDE.md
       const exists = await FileUtils.exists(claudeMDPath);
@@ -146,7 +154,14 @@ export class ClaudeMDManager {
       errors: [] as Array<{ path: string; error: string }>
     };
 
-    const newProtocol = await this.readTemplateProtocol();
+    const templateContent = await this.readTemplateProtocol();
+    const parsedTemplate = ProtocolParser.parse(templateContent);
+
+    if (!parsedTemplate.asinitSection) {
+      throw new Error('模板协议无效：未找到 ASINIT 标记');
+    }
+
+    const newProtocol = parsedTemplate.asinitSection;
 
     for (const projectPath of projectPaths) {
       try {

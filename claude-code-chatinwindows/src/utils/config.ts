@@ -31,7 +31,14 @@ export class ConfigManager {
 
     // 默认路径
     const homeDir = os.homedir();
-    return path.join(homeDir, 'Awesome_ClaudeMD');
+    let defaultPath = path.join(homeDir, 'Awesome_ClaudeMD');
+
+    // 如果在 Windows 上，且是 Git Bash 环境，处理路径
+    if (process.platform === 'win32') {
+      defaultPath = defaultPath.replace(/\\/g, '/');
+    }
+
+    return defaultPath;
   }
 
   /**

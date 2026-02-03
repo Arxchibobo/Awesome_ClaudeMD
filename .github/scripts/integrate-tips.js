@@ -1,10 +1,14 @@
-const { execSync } = require("child_process");
 const fs = require("fs").promises;
 const path = require("path");
+const {
+  BedrockRuntimeClient,
+  InvokeModelCommand,
+} = require("@aws-sdk/client-bedrock-runtime");
 
 // 配置
 const CONFIG = {
-  MODEL_ID: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+  // 使用当前可用的模型 ID
+  MODEL_ID: "anthropic.claude-3-5-sonnet-20240620-v1:0",
   REGION: process.env.AWS_REGION || "us-west-1",
   PROTOCOL_FILE: "asinit_AwosomeCLAUDE.md",
   TIPS_README: "tips/README.md",
@@ -12,34 +16,42 @@ const CONFIG = {
   ALLOWED_EXTENSIONS: [".md"],
 };
 
+/**
+ * 使用 AWS SDK 调用 Bedrock
+ */
 async function invokeClaudeBedrock(prompt) {
-  const body = JSON.stringify({
+  const client = new BedrockRuntimeClient({
+    region: CONFIG.REGION,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+  });
+
+  const body = {
     anthropic_version: "bedrock-2023-05-31",
     max_tokens: 16384,
     temperature: 0,
     messages: [{ role: "user", content: prompt }],
+  };
+
+  const command = new InvokeModelCommand({
+    modelId: CONFIG.MODEL_ID,
+    contentType: "application/json",
+    accept: "application/json",
+    body: JSON.stringify(body),
   });
 
-  const bodyBase64 = Buffer.from(body).toString("base64");
-  const outFile = "/tmp/bedrock-response.json";
+  console.log(`正在调用 Bedrock 模型: ${CONFIG.MODEL_ID}...`);
+  const response = await client.send(command);
+  const responseBody = JSON.parse(new TextDecoder().decode(response.body));
 
-  const cmd = `AWS_ACCESS_KEY_ID="${(process.env.AWS_ACCESS_KEY_ID || '').trim()}" \
-    AWS_SECRET_ACCESS_KEY="${(process.env.AWS_SECRET_ACCESS_KEY || '').trim()}" \
-    aws bedrock-runtime invoke-model \
-    --model-id "${CONFIG.MODEL_ID}" \
-    --region "${CONFIG.REGION}" \
-    --content-type "application/json" \
-    --accept "application/json" \
-    --body "${bodyBase64}" \
-    "${outFile}" 2>&1 || true`;
+  if (responseBody.content && responseBody.content.length > 0) {
+    console.log("Claude 响应成功，内容长度:", responseBody.content[0].text.length);
+    return responseBody.content[0].text;
+  }
 
-  console.log("调用 AWS CLI...");
-  execSync(cmd, { encoding: "utf-8" });
-
-  const responseBuffer = require("fs").readFileSync(outFile);
-  const response = JSON.parse(responseBuffer.toString("utf-8"));
-  console.log("Claude 响应成功，内容长度:", response.content[0].text.length);
-  return response.content[0].text;
+  throw new Error("Bedrock 响应格式无效");
 }
 
 // 安全：验证文件路径
@@ -95,19 +107,25 @@ ${tipsReadme}
 }
 
 async function main() {
-  const changedFiles = (process.argv[2] || "").split("\n").filter(Boolean);
+  const args = process.argv[2] || "";
+  const changedFiles = args.split(/\s+/).filter(Boolean);
+
   if (changedFiles.length === 0) {
-    console.log("No tips to integrate");
+    console.log("没有需要处理的 tips");
     return;
   }
 
-  console.log("Tips files:", changedFiles);
+  console.log("待处理的 Tips 文件:", changedFiles);
 
   // 读取 tips
   const tips = [];
   for (const file of changedFiles) {
     try {
       const cleanPath = validateFilePath(file);
+      if (!(await fs.stat(cleanPath).catch(() => null))?.isFile()) {
+        console.warn(`跳过不存在的文件: ${file}`);
+        continue;
+      }
       const content = await fs.readFile(cleanPath, "utf-8");
       tips.push(`### ${cleanPath}\n${content}`);
     } catch (err) {
@@ -116,7 +134,7 @@ async function main() {
   }
 
   if (tips.length === 0) {
-    console.log("No valid tips");
+    console.log("没有有效的 tips 需要整合");
     return;
   }
 
@@ -127,52 +145,33 @@ async function main() {
   ]);
 
   // 备份
-  await fs.writeFile(`${CONFIG.PROTOCOL_FILE}.bak`, currentProtocol);
+  const backupFile = `${CONFIG.PROTOCOL_FILE}.bak`;
+  await fs.writeFile(backupFile, currentProtocol);
 
   const prompt = buildPrompt(currentProtocol, tips.join("\n---\n"), tipsReadme);
-  console.log("Prompt length:", prompt.length);
 
   try {
     const content = await invokeClaudeBedrock(prompt);
-    console.log("Claude 返回内容前500字符:", content.substring(0, 500));
-
-    // 提取 JSON：使用括号匹配法，避免嵌套代码块导致正则失败
-    let jsonStr = content;
     
-    // 方法1：基于 JSON 结构提取（最可靠）
-    const firstOpen = content.indexOf('{');
-    const lastClose = content.lastIndexOf('}');
-    
-    if (firstOpen !== -1 && lastClose > firstOpen) {
-      jsonStr = content.substring(firstOpen, lastClose + 1);
-      console.log("基于括号提取 JSON，长度:", jsonStr.length);
-    } else {
-      // 方法2：回退到正则（使用 lastIndexOf 处理嵌套代码块）
-      const startMarker = "```json";
-      const endMarker = "```";
-      const startIndex = content.indexOf(startMarker);
-      
-      if (startIndex !== -1) {
-        const contentStart = startIndex + startMarker.length;
-        const endIndex = content.lastIndexOf(endMarker);
-        
-        if (endIndex > contentStart) {
-          jsonStr = content.substring(contentStart, endIndex).trim();
-          console.log("基于索引提取 JSON 块，长度:", jsonStr.length);
-        }
-      }
-    }
-
+    // 提取并解析 JSON
     let result;
     try {
+      const firstOpen = content.indexOf('{');
+      const lastClose = content.lastIndexOf('}');
+
+      if (firstOpen === -1 || lastClose <= firstOpen) {
+        throw new Error("未在响应中找到 JSON 结构");
+      }
+
+      const jsonStr = content.substring(firstOpen, lastClose + 1);
       result = JSON.parse(jsonStr);
     } catch (parseErr) {
-      console.error("JSON 解析失败，原始内容:", jsonStr.substring(0, 1000));
-      throw parseErr;
+      console.error("JSON 解析失败，原始内容:", content);
+      throw new Error(`无法解析 Claude 返回的 JSON: ${parseErr.message}`);
     }
 
-    if (!result.updatedProtocol.includes("<!-- ASINIT START -->")) {
-      throw new Error("输出缺少 ASINIT 标记");
+    if (!result.updatedProtocol || !result.updatedProtocol.includes("<!-- ASINIT START -->")) {
+      throw new Error("输出内容不完整或缺少 ASINIT 标记");
     }
 
     await fs.writeFile(CONFIG.PROTOCOL_FILE, result.updatedProtocol);
@@ -184,22 +183,31 @@ async function main() {
     for (const file of changedFiles) {
       try {
         const cleanPath = validateFilePath(file);
-        const fileName = path.basename(cleanPath, ".md");
-        const dest = path.join(CONFIG.TIPS_ARCHIVED, `${fileName}_${today}.md`);
-        await fs.rename(cleanPath, dest);
-        console.log(`归档: ${cleanPath} → ${dest}`);
+        if (await fs.stat(cleanPath).catch(() => null)) {
+          const fileName = path.basename(cleanPath, ".md");
+          const dest = path.join(CONFIG.TIPS_ARCHIVED, `${fileName}_${today}.md`);
+          await fs.rename(cleanPath, dest);
+          console.log(`归档成功: ${cleanPath} → ${dest}`);
+        }
       } catch (err) {
         console.warn(`归档失败 ${file}: ${err.message}`);
       }
     }
 
-    await fs.unlink(`${CONFIG.PROTOCOL_FILE}.bak`);
-    console.log("✅ 完成!", result.summary);
+    await fs.unlink(backupFile);
+    console.log("✅ 整合完成!", result.summary);
   } catch (err) {
-    console.error("失败:", err.message);
-    await fs.copyFile(`${CONFIG.PROTOCOL_FILE}.bak`, CONFIG.PROTOCOL_FILE).catch(() => {});
+    console.error("❌ 整合失败:", err.message);
+    if (await fs.stat(backupFile).catch(() => null)) {
+      await fs.copyFile(backupFile, CONFIG.PROTOCOL_FILE);
+      await fs.unlink(backupFile);
+      console.log("已从备份恢复原始协议文件");
+    }
     process.exit(1);
   }
 }
 
-main();
+main().catch(err => {
+  console.error("未捕获的错误:", err);
+  process.exit(1);
+});
