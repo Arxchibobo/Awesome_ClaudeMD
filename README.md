@@ -1,77 +1,51 @@
 # Awesome ClaudeMD
 
-团队共享 CLAUDE.md 的管理方案
+**A team collaboration framework for managing and synchronizing AI development protocols (`CLAUDE.md`) across projects.**
 
-## 解决什么问题？
-
-手动维护 CLAUDE.md 的痛点：
-- 发现问题要手动编辑，容易遗漏
-- 团队成员经验无法共享沉淀
-- 每个人的版本不一致
-
-## 方案优势
-
-### 1. 一次安装，永久热更新
-
-```bash
-# 安装（只需一次）
-git clone https://github.com/Arxchibobo/Awesome_ClaudeMD.git ~/Awesome_ClaudeMD
-ln -sf ~/Awesome_ClaudeMD/asinit_AwosomeCLAUDE.md ~/.claude/commands/asinit.md
-
-# 使用（任意项目中）
-/asinit
-```
-
-执行 `/asinit` 时自动 `git pull` 拉取最新协议，软链接确保始终使用最新版本。
-
-**对比手动方式：** 不用每次复制粘贴，不用担心版本过期。
-
-### 2. 团队经验自动整合
-
-团队成员提交避坑经验到 `tips/` 目录，GitHub Actions 自动触发 Claude 审核整合：
-
-```
-提交 tips/xxx.md → Claude 分析 → 自动合并到协议 → 全员 /asinit 同步
-```
-
-**安全机制：**
-- 路径校验，防止越权访问
-- 输出校验，确保协议完整性
-- 自动备份，失败可恢复
-
-**对比手动方式：** 不用人工审核合并，不用担心格式错乱。
-
-### 3. 分层设计，各司其职
-
-协议分两层，互不干扰：
-
-```markdown
-<!-- ASINIT START -->
-## 一、标准执行流程     ← 固定不变，定义开发流程
-## 二、规范约束         ← 持续积累，团队经验沉淀
-<!-- ASINIT END -->
-```
-
-| 层级 | 内容 | 说明 |
-|------|------|------|
-| 执行流程层 | 严格模式/通用模式的标准流程 | 稳定不变 |
-| 约束补丁层 | 测试规范、提交规范、避坑经验 | 持续追加 |
-
-**对比手动方式：** 结构清晰，新增内容不会破坏原有流程。
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub Actions](https://img.shields.io/badge/CI-GitHub%20Actions-blue)](/.github/workflows/integrate-tips.yml)
+[![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension%20v1.0.0-007ACC)](claude-code-chatinwindows/)
 
 ---
 
-## 快速开始
+## Overview
+
+`CLAUDE.md` files define how Claude Code behaves in a project — coding standards, execution flows, testing rules, and team conventions. Maintaining them manually is painful: you copy-paste between projects, versions drift across teammates, and hard-won lessons never get shared.
+
+**Awesome ClaudeMD** solves this with three mechanisms:
+
+1. **One-time install, permanent hot updates** — a symlink keeps every project pointing at the latest protocol automatically
+2. **Automated team experience integration** — teammates submit `tips/*.md` files; GitHub Actions + Claude AI synthesizes them into the shared protocol
+3. **Two-layer protocol design** — a stable execution flow layer and an accumulating constraints layer that never conflict
+
+---
+
+## Features
+
+- `/asinit` slash command for Claude Code — auto-pulls latest protocol and writes/updates `CLAUDE.md` in any project
+- **Two execution modes**: Strict mode (spec-driven, 5-step flow with Gemini review) and General mode (4-step flow)
+- **Tips system** — community experience sharing with named contribution files (`tips/<topic>-<author>.md`)
+- **GitHub Actions automation** — triggers on `tips/` changes, runs Claude Sonnet analysis via AWS Bedrock, auto-commits integrated results
+- **VS Code extension** (`claudemd-manager`) — visual dashboard for protocol management, Tips submission, Git sync, and AI integration
+- **Reusable templates** — battle-tested `CLAUDE.md` templates in `templates/`
+- **Two-layer protocol architecture** with `<!-- ASINIT START/END -->` markers, preserving custom project content
+
+---
+
+## Quick Start
 
 ### macOS / Linux
 
 ```bash
+# Clone once
 git clone https://github.com/Arxchibobo/Awesome_ClaudeMD.git ~/Awesome_ClaudeMD
+
+# Create symlink (one-time setup)
 mkdir -p ~/.claude/commands
 ln -sf ~/Awesome_ClaudeMD/asinit_AwosomeCLAUDE.md ~/.claude/commands/asinit.md
 ```
 
-### Windows (PowerShell 管理员)
+### Windows (PowerShell as Administrator)
 
 ```powershell
 git clone https://github.com/Arxchibobo/Awesome_ClaudeMD.git "$env:USERPROFILE\Awesome_ClaudeMD"
@@ -79,60 +53,158 @@ New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\commands"
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\commands\asinit.md" -Target "$env:USERPROFILE\Awesome_ClaudeMD\asinit_AwosomeCLAUDE.md" -Force
 ```
 
-### 使用
+### Usage
 
-```bash
+In any project with Claude Code:
+
+```
 /asinit
 ```
 
+This command automatically pulls the latest protocol and writes (or updates) `CLAUDE.md` in your project, preserving any project-specific content outside the `<!-- ASINIT START/END -->` markers.
+
 ---
 
-## 贡献避坑经验
+## How the `/asinit` Command Works
+
+```
+/asinit
+  ├── Step 1: git pull ~/Awesome_ClaudeMD  (auto-update)
+  └── Step 2: Write CLAUDE.md
+        ├── If missing → create new file
+        ├── If exists, no markers → prepend protocol block
+        └── If exists with markers → update only the marked block
+```
+
+The protocol block contains two layers:
+
+| Layer | Content | Stability |
+|-------|---------|-----------|
+| Execution Flow | Strict mode / General mode standard processes | Fixed |
+| Constraint Patches | Testing rules, commit conventions, team tips | Continuously updated |
+
+---
+
+## Contributing Tips
+
+Share your hard-won lessons with the team:
 
 ```bash
-# 1. 拉取最新
+# 1. Pull latest
 git pull origin main
 
-# 2. 创建文件（命名：主题-姓名.md）
-touch tips/null-check-leon.md
+# 2. Create a tip file (naming: topic-yourname.md)
+cp tips/_template.md tips/null-check-yourname.md
 
-# 3. 填写内容后提交
-git add tips/你的文件.md
-git commit -m "tips: 添加 xxx 经验"
+# 3. Fill in the template, then commit
+git add tips/null-check-yourname.md
+git commit -m "tips: add null check pattern"
 git push
 ```
 
-推送后自动整合，无需人工干预。
+After pushing, GitHub Actions automatically triggers Claude AI to analyze and integrate the tip into the shared protocol. No manual review required.
 
----
+**Tip file template:**
 
-## 可复用模板
+```markdown
+## Problem
+[Describe the issue that caused bugs or confusion]
 
-`templates/` 目录提供经过验证的 CLAUDE.md 模板，可直接复制使用：
+## Solution
+[How Claude should handle this situation]
 
-| 模板 | 适用场景 |
-|------|----------|
-| [team-claude-v1.md](templates/team-claude-v1.md) | 团队协作项目 |
-
-### 使用模板
-
-```bash
-# 复制到你的项目
-cp templates/team-claude-v1.md /your/project/CLAUDE.md
-
-# 编辑自定义区域（搜索 [YOUR_ 占位符）
+## Example (optional)
+[Concrete code example]
 ```
 
-详见 [templates/README.md](templates/README.md)
+---
+
+## Templates
+
+The `templates/` directory provides verified `CLAUDE.md` templates for immediate use:
+
+| Template | Best For |
+|----------|---------|
+| [`team-claude-v1.md`](templates/team-claude-v1.md) | Team collaboration projects |
+
+```bash
+# Copy to your project
+cp templates/team-claude-v1.md /your/project/CLAUDE.md
+
+# Customize placeholders (search for [YOUR_ )
+```
+
+See [`templates/README.md`](templates/README.md) for details.
 
 ---
 
-## 仓库配置
+## VS Code Extension
 
-Settings → Secrets → Actions 添加：
+A companion VS Code extension (`claudemd-manager`) provides a graphical interface for all features.
 
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
+**Install from VSIX:**
+
+```bash
+code --install-extension claude-code-chatinwindows/claudemd-manager-1.0.0.vsix
+```
+
+**Features:**
+- Main dashboard — project status, repo sync state, Tips stats, commit history
+- Tips manager — submit, view pending/integrated tips, archive
+- One-click protocol sync and application
+- AWS Bedrock integration for local AI-powered Tips synthesis
+
+See [`INSTALL_GUIDE.md`](INSTALL_GUIDE.md) for full setup instructions.
+
+---
+
+## GitHub Actions Setup
+
+For the automated Tips integration to work, add these secrets to your fork:
+
+**Settings → Secrets → Actions:**
+
+| Secret | Value |
+|--------|-------|
+| `AWS_ACCESS_KEY_ID` | Your AWS access key |
+| `AWS_SECRET_ACCESS_KEY` | Your AWS secret key |
+
+The workflow uses AWS Bedrock (Claude Sonnet) to analyze tips and update the protocol. AWS credentials are only required if you fork and run the automation yourself.
+
+---
+
+## Repository Structure
+
+```
+Awesome_ClaudeMD/
+├── asinit_AwosomeCLAUDE.md        # Core protocol template (symlinked as /asinit)
+├── CLAUDE.md                       # This repo's own AI development protocol
+├── tips/                           # Community experience contributions
+│   ├── _template.md               # Template for new tips
+│   └── *.md                       # Individual tip files
+├── templates/                      # Reusable CLAUDE.md templates
+│   └── team-claude-v1.md
+├── claude-code-chatinwindows/      # VS Code extension source + VSIX
+│   ├── src/                       # TypeScript source (22 files)
+│   ├── claudemd-manager-1.0.0.vsix
+│   └── package.json
+├── .github/
+│   ├── workflows/integrate-tips.yml
+│   └── scripts/integrate-tips.js
+└── INSTALL_GUIDE.md
+```
+
+---
+
+## Requirements
+
+- **Claude Code** — for `/asinit` slash command usage
+- **Git** — for cloning and symlink setup
+- **Node.js 20+** — for VS Code extension development only
+- **VS Code 1.85+** — for the extension
+- **AWS account with Bedrock access** — only for automated Tips integration (optional)
+
+---
 
 ## License
 
