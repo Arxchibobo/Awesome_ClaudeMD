@@ -21,17 +21,20 @@ export class GitRepository {
   private repoPath: string;
   private remoteUrl: string;
 
-  constructor(repoPath: string, remoteUrl: string = 'https://github.com/LeonSGP43/Awesome_ClaudeMD.git') {
+  constructor(repoPath: string, remoteUrl: string = 'https://github.com/LeonSGP43/Awesome_ClaudeMD.git', gitInstance?: SimpleGit) {
     this.repoPath = repoPath;
     this.remoteUrl = remoteUrl;
 
-    const options: Partial<SimpleGitOptions> = {
-      baseDir: repoPath,
-      binary: 'git',
-      maxConcurrentProcesses: 6,
-    };
-
-    this.git = simpleGit(options);
+    if (gitInstance) {
+      this.git = gitInstance;
+    } else {
+      const options: Partial<SimpleGitOptions> = {
+        baseDir: repoPath,
+        binary: 'git',
+        maxConcurrentProcesses: 6,
+      };
+      this.git = simpleGit(options);
+    }
   }
 
   /**

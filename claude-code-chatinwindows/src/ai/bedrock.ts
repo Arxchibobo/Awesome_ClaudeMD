@@ -35,7 +35,7 @@ export class BedrockClient {
     }
 
     this.client = new BedrockRuntimeClient(clientConfig);
-    this.modelId = config.modelId || 'us.anthropic.claude-sonnet-4-5-20250929-v1:0';
+    this.modelId = config.modelId || 'anthropic.claude-3-5-sonnet-20240620-v1:0';
   }
 
   /**

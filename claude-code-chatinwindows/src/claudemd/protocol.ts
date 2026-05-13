@@ -29,16 +29,34 @@ export class ProtocolParser {
    * 解析 CLAUDE.md 文件
    */
   static parse(content: string): ProtocolContent {
-    const startIndex = content.indexOf(PROTOCOL_MARKERS.START);
-    const endIndex = content.indexOf(PROTOCOL_MARKERS.END);
+    const startRegex = new RegExp(`^${PROTOCOL_MARKERS.START}`, 'm');
+    const endRegex = new RegExp(`^${PROTOCOL_MARKERS.END}`, 'm');
 
-    if (startIndex === -1 || endIndex === -1) {
-      return {
-        fullContent: content,
-        customContent: content
-      };
+    const startMatch = content.match(startRegex);
+    const endMatch = content.match(endRegex);
+
+    let startIndex: number;
+    let endIndex: number;
+
+    if (!startMatch || !endMatch) {
+      startIndex = content.indexOf(PROTOCOL_MARKERS.START);
+      endIndex = content.indexOf(PROTOCOL_MARKERS.END);
+
+      if (startIndex === -1 || endIndex === -1) {
+        return {
+          fullContent: content,
+          customContent: content
+        };
+      }
+    } else {
+      startIndex = startMatch.index!;
+      endIndex = endMatch.index!;
     }
 
+    return this.parseWithIndices(content, startIndex, endIndex);
+  }
+
+  private static parseWithIndices(content: string, startIndex: number, endIndex: number): ProtocolContent {
     // 提取 asinit 部分
     const asinitSection = content.substring(
       startIndex,
@@ -85,12 +103,13 @@ export class ProtocolParser {
       return newAsinitSection;
     }
 
-    // 替换 asinit 部分，保留自定义内容
-    const startIndex = currentContent.indexOf(PROTOCOL_MARKERS.START);
-    const endIndex = currentContent.indexOf(PROTOCOL_MARKERS.END);
+    // 重新解析以获取准确索引
+    const currentParsed = this.parse(currentContent);
+    const startIndex = currentContent.indexOf(currentParsed.asinitSection!);
+    const endIndex = startIndex + currentParsed.asinitSection!.length;
 
     const before = currentContent.substring(0, startIndex);
-    const after = currentContent.substring(endIndex + PROTOCOL_MARKERS.END.length);
+    const after = currentContent.substring(endIndex);
 
     return `${before}${newAsinitSection}${after}`;
   }
